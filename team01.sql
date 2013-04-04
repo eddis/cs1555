@@ -122,8 +122,8 @@ insert into customer values ('user2', 'password', 'Paris', '4155 Scarlett Drive'
 insert into customer values ('user3', 'password', 'Joel', '4156 Scarlett Drive', 'joel@gmail.com');
 insert into customer values ('user4', 'password', 'Marissa', '4157 Scarlett Drive', 'marissa@gmail.com');
 	
-insert into administrator values ('admin', 'admin', 'Bobby', '6810 SENSQ', 'admin@gmail.com');
-insert into administrator values ('admin2', 'admin', 'Timmy', '6810 SENSQ', 'admin2@gmail.com');
+insert into administrator values ('admin', 'root', 'Bobby', '6810 SENSQ', 'admin@gmail.com');
+insert into administrator values ('admin2', 'root', 'Timmy', '6810 SENSQ', 'admin2@gmail.com');
 
 insert into category values ('Books', null);
 insert into category values ('Textbooks', 'Books');
@@ -265,7 +265,72 @@ insert into bidlog values (bidlog_bidsn_sequence.nextval, 0, 'user4', to_date('0
 insert into bidlog values (bidlog_bidsn_sequence.nextval, 1, 'user4', to_date('04/03/2013 11:59:15', 'MM/DD/YYYY HH24:MI:SS'), 185);
 
 -- * Selling products
--- TODO
+create or replace function Second_Highest_Bid(auction_id in int)
+	return int
+is
+	second_highest_bid_bidsn int;
+	second_highest_bid_amount int;
+begin
+	select max(amount) 
+	into second_highest_bid_amount
+	from bidlog
+	where bidlog.auction_id = auction_id and amount != (
+		select max(amount) 
+		from bidlog
+		where bidlog.auction_id = auction_id
+	);
+
+	select bidsn
+	into second_highest_bid_bidsn
+	from bidlog
+	where bidlog.auction_id = auction_id and amount = second_highest_bid_amount;
+
+	return second_highest_bid_bidsn;
+end;
+/
+
+create or replace procedure sell_product(auction_id in int)
+is
+	num_bids int;
+	winning_bid_bidsn int;
+	winning_bid_bidder varchar2(10);
+	winning_bid_amount int;
+begin
+	select count(bidsn)
+	into num_bids
+	from bidlog
+	where bidlog.auction_id = auction_id;
+
+	if num_bids = 1 then
+		select bidsn into winning_bid_bidsn from bidlog where bidlog.auction_id = auction_id;
+	else
+		winning_bid_bidsn := Second_Highest_Bid(auction_id);
+	end if;
+
+	select amount into winning_bid_amount from bidlog where bidsn = winning_bid_bidsn;
+	select bidder into winning_bid_bidder from bidlog where bidsn = winning_bid_bidsn;
+
+	update product 
+	set status = 'sold', 
+	    buyer = winning_bid_bidder, 
+	    sell_date = start_date + number_of_days, 
+	    amount = winning_bid_amount
+	where product.auction_id = auction_id;
+
+	commit;
+end;
+/
+
+create or replace procedure withdraw_product(auction_id in int)
+is
+begin
+	update product
+	set status = 'withdrawn'
+	where product.auction_id = auction_id;
+
+	commit;
+end;
+/
 
 -- * Suggestions
 --    - Customer X: 'user1'
@@ -275,18 +340,37 @@ from product join bidlog
 on product.auction_id = bidlog.auction_id
 where status = 'underauction' and bidder in (
 	select distinct bidder
-	from bidlog
-	where auction_id in (
+	from bidlog bl1
+	where not exists (
 		select distinct auction_id
-		from bidlog
-		where bidder = 'user1'
+		from bidlog cust_bidlog
+		where bidder = 'user1' and not exists (
+			select distinct bidder
+			from bidlog bl2
+			where bl1.bidder = bl2.bidder and bl2.auction_id = cust_bidlog.auction_id
+		)
 	)
 );
+
+-- select distinct product.auction_id
+-- from product join bidlog
+-- on product.auction_id = bidlog.auction_id
+-- where status = 'underauction' and bidder in (
+-- 	select distinct bidder
+-- 	from bidlog
+-- 	where auction_id in (
+-- 		select distinct auction_id
+-- 		from bidlog
+-- 		where bidder = 'user1'
+-- 	)
+-- );
 
 -- # Administrator Interface
 --
 -- * New customer registration
-create or replace procedure create_user(login in varchar2, password in varchar2, name in varchar2, address in varchar2, email in varchar2, is_admin in int)
+create or replace procedure create_user(login in varchar2, password in varchar2, 
+										name in varchar2, address in varchar2, 
+										email in varchar2, is_admin in int)
 is
 begin
 	if is_admin = 1 then
@@ -322,11 +406,182 @@ from (
 );
 
 -- * Product statistics (customer's products)
+--    - Customer X: 'user1'
+select name, status, amount as highest_bid, highest_bidder
+from (
+	(
+		select name, status, amount, buyer as highest_bidder
+		from product
+		where seller = 'user1' and status = 'sold'
+	) 
+	union
+	(
+		select product.name, product.status, product.amount, bidlog.bidder as highest_bidder
+		from product join bidlog
+		on product.auction_id = bidlog.auction_id and product.amount = bidlog.amount
+		where product.seller = 'user1' and product.status != 'sold'
+	)
+);
 
 -- * Statistics
+--
+-- * Product_Count
+create or replace function Product_Count(category in varchar, months in int)
+	return int
+is
+	cur_time date;
+	num_sold int;
+begin
+	-- grab the current time
+	select current_time
+	into cur_time
+	from system_time;
+
+	select count(product.auction_id)
+	into num_sold
+	from product join (
+		select auction_id
+		from belongs_to
+		where belongs_to.category = category
+	) category_product
+	on product.auction_id = category_product.auction_id;
+	where product.status = 'sold' and product.sell_date >= add_months(cur_time, -months);
+
+	return num_sold;
+end;
+/
+
+-- * Bid_Count
+create or replace function Bid_Count(user in varchar, months in int)
+	return int
+is
+	cur_time date;
+	num_bids int;
+begin
+	-- grab the current time
+	select current_time
+	into cur_time
+	from system_time;
+
+	select count(bidlog.bidsn)
+	into num_bids
+	from bidlog join customer
+	on bidlog.bidder = customer.login
+	where customer.login = user and bidlog.bid_date >= add_months(cur_time, -months);
+
+	return num_bids;
+end;
+/
+
+-- * Buying_Amount
+create or replace function Buying_Amount(user in varchar, months in int)
+	return int
+is
+	cur_time date;
+	spent int;
+begin
+	-- grab the current time
+	select current_time
+	into cur_time
+	from system_time;
+
+	select sum(amount)
+	into spent
+	from product
+	where buyer = user and sell_date >= add_months(cur_time, -months);
+
+	return spent;
+end;
+/
+
+-- * top k highest volume categories (leaf nodes)
+--    - k = 2, months = 1
+-- select name as highest_volume_category
+-- from (
+-- 	select *
+-- 	from product join (
+-- 		select *
+-- 		from category
+-- 		where name not in (
+-- 			select distinct parent_category
+-- 			from category
+-- 			where parent_category is not null
+-- 		)
+-- 	) leaf_category
+-- 	on product.auction_id = leaf_category.auction_id
+-- 	group by leaf_category.name
+-- 	order by count(*) desc
+-- )
+-- where rownum <= 2
+-- order by rownum;
+
+select name as highest_volume_category
+from (
+	select *
+	from category
+	where name not in (
+		select distinct parent_category
+		from category
+		where parent_category is not null
+	)
+	group by name
+	order by Product_Count(name, 1) desc
+)
+where rownum <= 2
+order by rownum;
+
+-- * top k highest volume categories (root nodes)
+--    - k = 2, months = 1
+-- select name as highest_volume_category
+-- from (
+-- 	select *
+-- 	from product join (
+-- 		select *
+-- 		from category
+-- 		where parent_category is null
+-- 	) root_category
+-- 	on product.auction_id = root_category.auction_id
+-- 	group by root_category.name
+-- 	order by count(*) desc
+-- )
+-- where rownum <= 2
+-- order by rownum;
+
+select name as highest_volume_category
+from (
+	select *
+	from category
+	where parent_category is null
+	group by name
+	order by Product_Count(name, 1) desc
+)
+where rownum <= 2
+order by rownum;
+
+-- * top k most active bidders
+--    - k = 2, months = 1
+select login as most_active_bidder
+from (
+	select login
+	from customer
+	order by Bid_Count(login, 1) desc
+)
+where rownum <= 2
+order by rownum;
+
+-- * top k most active buyers
+--    - k = 2, months = 1
+select login as most_active_bidder
+from (
+	select login
+	from customer
+	order by Buying_Amount(login, 1) desc
+)
+where rownum <= 2
+order by rownum;
+
 
 -- # Additional functional requirements
---
 create or replace trigger tri_closeAuctions
 after update of current_time
 on system_time
@@ -334,6 +589,6 @@ for each row
 begin
 	update product
 	set status = 'close'
-	where status = 'underauction' and sell_date <= :new.current_time;
+	where status = 'underauction' and start_date + number_of_days <= :new.current_time;
 end;
 /
