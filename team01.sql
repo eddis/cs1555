@@ -128,9 +128,11 @@ insert into customer values ('user1', 'password', 'Ferris', '4154 Scarlett Drive
 insert into customer values ('user2', 'password', 'Paris', '4155 Scarlett Drive', 'paris@gmail.com');
 insert into customer values ('user3', 'password', 'Joel', '4156 Scarlett Drive', 'joel@gmail.com');
 insert into customer values ('user4', 'password', 'Marissa', '4157 Scarlett Drive', 'marissa@gmail.com');
-	
+commit;
+
 insert into administrator values ('admin', 'root', 'Bobby', '6810 SENSQ', 'admin@gmail.com');
 insert into administrator values ('admin2', 'root', 'Timmy', '6810 SENSQ', 'admin2@gmail.com');
+commit;
 
 insert into category values ('Books', null);
 insert into category values ('Textbooks', 'Books');
@@ -143,8 +145,10 @@ insert into category values ('Computer Related', null);
 insert into category values ('Desktop PCs', 'Computer Related');
 insert into category values ('Laptops', 'Computer Related');
 insert into category values ('Monitors', 'Computer Related');
+commit;
 
 insert into system_time values (to_date('04/03/2013 11:59:00', 'MM/DD/YYYY HH24:MI:SS'));
+commit;
 
 insert into product values (product_auction_id_sequence.nextval, 
 						    '17 inch monitor', '17 inches', 
@@ -158,6 +162,7 @@ insert into product values (product_auction_id_sequence.nextval,
 						    'Jellicoe Road', 'Melina Marchetta', 
 						    'user3', to_date('04/03/2013 11:55:00', 'MM/DD/YYYY HH24:MI:SS'), 7, 1, 
 						    'underauction', null, null, null);
+commit;
 
 insert into belongs_to values (0, 'Monitors');
 insert into belongs_to values (0, 'Computer Related');
@@ -165,6 +170,7 @@ insert into belongs_to values (1, 'Monitors');
 insert into belongs_to values (1, 'Computer Related');
 insert into belongs_to values (2, 'Fiction books');
 insert into belongs_to values (2, 'Books');
+commit;
 
 -- ## SQL Statements
 --
@@ -264,14 +270,19 @@ end;
 -- Test the triggers
 select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
 insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user4', to_date('04/03/2013 11:59:00', 'MM/DD/YYYY HH24:MI:SS'), 1);
+commit;
 select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
 insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user1', to_date('04/03/2013 11:59:05', 'MM/DD/YYYY HH24:MI:SS'), 2);
+commit;
 select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
 insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user4', to_date('04/03/2013 11:59:10', 'MM/DD/YYYY HH24:MI:SS'), 2);
+commit;
 select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
 
 insert into bidlog values (bidlog_bidsn_sequence.nextval, 0, 'user4', to_date('04/03/2013 11:59:15', 'MM/DD/YYYY HH24:MI:SS'), 180);
+commit;
 insert into bidlog values (bidlog_bidsn_sequence.nextval, 1, 'user4', to_date('04/03/2013 11:59:20', 'MM/DD/YYYY HH24:MI:SS'), 185);
+commit;
 
 -- * Selling products
 create or replace function Second_Highest_Bid(auction_id in int)
