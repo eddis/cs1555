@@ -77,6 +77,7 @@ create table bidlog(
 	constraint fk_bidlog_bidder foreign key (bidder) references customer(login)
 		initially immediate deferrable
 	--
+	-- TODO
 --	constraint check_highest_bid
 --		check (
 --			case (select distinct amount from product where product.auction_id = auction_id)
@@ -170,7 +171,7 @@ select product.auction_id, name, description, amount, min_price, start_date, num
 from product join belongs_to
 on product.auction_id = belongs_to.auction_id
 where status = 'underauction' and category = 'Books'
-order by amount desc;
+order by amount desc nulls last;
 
 -- * Browsing Products (alphabetically)
 --    - User-selected category: 'Books'
@@ -334,7 +335,7 @@ end;
 
 -- * Suggestions
 --    - Customer X: 'user1'
--- FIXME
+-- TODO: order by desirability
 select distinct product.auction_id
 from product join bidlog
 on product.auction_id = bidlog.auction_id
@@ -350,20 +351,11 @@ where status = 'underauction' and bidder in (
 			where bl1.bidder = bl2.bidder and bl2.auction_id = cust_bidlog.auction_id
 		)
 	)
+) and product.auction_id not in (
+	select distinct auction_id
+	from bidlog
+	where bidder = 'user1'
 );
-
--- select distinct product.auction_id
--- from product join bidlog
--- on product.auction_id = bidlog.auction_id
--- where status = 'underauction' and bidder in (
--- 	select distinct bidder
--- 	from bidlog
--- 	where auction_id in (
--- 		select distinct auction_id
--- 		from bidlog
--- 		where bidder = 'user1'
--- 	)
--- );
 
 -- # Administrator Interface
 --
@@ -444,7 +436,7 @@ begin
 		from belongs_to
 		where belongs_to.category = category
 	) category_product
-	on product.auction_id = category_product.auction_id;
+	on product.auction_id = category_product.auction_id
 	where product.status = 'sold' and product.sell_date >= add_months(cur_time, -months);
 
 	return num_sold;
@@ -467,7 +459,7 @@ begin
 	into num_bids
 	from bidlog join customer
 	on bidlog.bidder = customer.login
-	where customer.login = user and bidlog.bid_date >= add_months(cur_time, -months);
+	where customer.login = user and bidlog.bid_time >= add_months(cur_time, -months);
 
 	return num_bids;
 end;
@@ -496,28 +488,9 @@ end;
 
 -- * top k highest volume categories (leaf nodes)
 --    - k = 2, months = 1
--- select name as highest_volume_category
--- from (
--- 	select *
--- 	from product join (
--- 		select *
--- 		from category
--- 		where name not in (
--- 			select distinct parent_category
--- 			from category
--- 			where parent_category is not null
--- 		)
--- 	) leaf_category
--- 	on product.auction_id = leaf_category.auction_id
--- 	group by leaf_category.name
--- 	order by count(*) desc
--- )
--- where rownum <= 2
--- order by rownum;
-
 select name as highest_volume_category
 from (
-	select *
+	select name
 	from category
 	where name not in (
 		select distinct parent_category
@@ -532,24 +505,9 @@ order by rownum;
 
 -- * top k highest volume categories (root nodes)
 --    - k = 2, months = 1
--- select name as highest_volume_category
--- from (
--- 	select *
--- 	from product join (
--- 		select *
--- 		from category
--- 		where parent_category is null
--- 	) root_category
--- 	on product.auction_id = root_category.auction_id
--- 	group by root_category.name
--- 	order by count(*) desc
--- )
--- where rownum <= 2
--- order by rownum;
-
 select name as highest_volume_category
 from (
-	select *
+	select name
 	from category
 	where parent_category is null
 	group by name
@@ -562,8 +520,11 @@ order by rownum;
 --    - k = 2, months = 1
 select login as most_active_bidder
 from (
-	select login
-	from customer
+	select distinct customer.login
+	from customer join bidlog
+	on customer.login = bidlog.bidder
+	group by customer.login
+	having count(*) > 0
 	order by Bid_Count(login, 1) desc
 )
 where rownum <= 2
@@ -573,8 +534,11 @@ order by rownum;
 --    - k = 2, months = 1
 select login as most_active_bidder
 from (
-	select login
-	from customer
+	select distinct customer.login
+	from customer join product
+	on customer.login = product.buyer
+	group by customer.login
+	having count(*) > 0
 	order by Buying_Amount(login, 1) desc
 )
 where rownum <= 2
