@@ -7,6 +7,7 @@ drop table bidlog cascade constraints;
 drop sequence bidlog_bidsn_sequence;
 drop table category cascade constraints;
 drop table belongs_to cascade constraints;
+drop table system_time cascade constraints;
 
 -- ## Create the database tables
 create table customer(
@@ -36,7 +37,7 @@ create table administrator(
 );
 
 -- define a sequence for generating auction id numbers
-create sequence product_auction_id_sequence start with 0 increment by 1 nomaxvalue;
+create sequence product_auction_id_sequence start with 0 increment by 1 minvalue 0 nomaxvalue;
 
 create table product(
 	auction_id int not null,
@@ -60,7 +61,7 @@ create table product(
 );
 
 -- define a sequence for generating bidsn numbers
-create sequence bidlog_bidsn_sequence start with 0 increment by 1 nomaxvalue;
+create sequence bidlog_bidsn_sequence start with 0 increment by 1 minvalue 0 nomaxvalue;
 
 create table bidlog(
 	bidsn int not null,
@@ -74,16 +75,18 @@ create table bidlog(
 	constraint fk_bidlog_auction_id foreign key (auction_id) references product(auction_id)
 		initially immediate deferrable,
 	constraint fk_bidlog_bidder foreign key (bidder) references customer(login)
-		initially immediate deferrable,
+		initially immediate deferrable
 	--
-	constraint check_highest_bid
-		check (
-			case when (select amount from product where product.auction_id = auction_id) is null then
-				amount >= (select min_price from product where product.auction_id = auction_id)
-			else
-				amount > (select amount from product where product.auction_id = auction_id)
-			end
-		)
+--	constraint check_highest_bid
+--		check (
+--			case (select distinct amount from product where product.auction_id = auction_id)
+--			when is null then
+--				amount >= (select min_price from product where product.auction_id = auction_id)
+--			else
+--				amount > (select amount from product where product.auction_id = auction_id)
+--			end 
+--		)
+--		initially immediate deferrable
 );	
 
 create table category(
@@ -150,8 +153,11 @@ insert into product values (product_auction_id_sequence.nextval,
 						    'underauction', null, null, null);
 
 insert into belongs_to values (0, 'Monitors');
+insert into belongs_to values (0, 'Computer Related');
 insert into belongs_to values (1, 'Monitors');
+insert into belongs_to values (1, 'Computer Related');
 insert into belongs_to values (2, 'Fiction books');
+insert into belongs_to values (2, 'Books');
 
 -- ## SQL Statements
 --
@@ -160,7 +166,7 @@ insert into belongs_to values (2, 'Fiction books');
 -- * Browsing Products (by highest bid)
 --    - User-selected category: 'Books'
 --    - User is sorting by highest bid amount
-select auction_id, name, description, amount, min_price, start_date, number_of_days, seller
+select product.auction_id, name, description, amount, min_price, start_date, number_of_days, seller
 from product join belongs_to
 on product.auction_id = belongs_to.auction_id
 where status = 'underauction' and category = 'Books'
@@ -169,7 +175,7 @@ order by amount desc;
 -- * Browsing Products (alphabetically)
 --    - User-selected category: 'Books'
 --    - User is sorting by product name
-select auction_id, name, description, amount, min_price, start_date, number_of_days, seller
+select product.auction_id, name, description, amount, min_price, start_date, number_of_days, seller
 from product join belongs_to
 on product.auction_id = belongs_to.auction_id
 where status = 'underauction' and category = 'Books'
@@ -178,7 +184,7 @@ order by name asc;
 -- * Searching for product by text
 --    - let keyword 1 = 'Marchetta'
 --    - let keyword 2 = ''
-select auction_id, name, description, status, amount, min_price, start_date, number_of_days, seller
+select product.auction_id, name, description, status, amount, min_price, start_date, number_of_days, seller
 from product
 where description LIKE '%Marchetta%' and description LIKE '%%';
 
@@ -188,32 +194,24 @@ where description LIKE '%Marchetta%' and description LIKE '%%';
 create or replace procedure put_product(seller in varchar2, name in varchar2, description in varchar2, category in varchar2, min_price in int, num_days in int)
 is
 	cur_time date;
-	cur_category varchar2;
+	cur_category varchar2(20);
+	id int;
 begin
 	-- grab the current time
 	select current_time
 	into cur_time
 	from system_time;
 
+	-- save the next auction id
+	id := product_auction_id_sequence.nextval;
+
     -- add the product
-    insert into product values (
-    	product_auction_id_sequence.nextval, 
-    	name,
-    	description,
-    	seller,
-    	cur_time,
-    	num_days,
-    	min_price,
-    	'underauction',
-    	null,
-    	null,
-    	null
-    );
+    insert into product values (id, name, description, seller, cur_time, num_days, min_price, 'underauction', null, null, null);
 
     commit;
 
     -- categorize the product by visiting all parent categories up the chain
-	cur_category = category;
+	cur_category := category;
 	loop
 		exit when cur_category IS null;
 		
@@ -242,8 +240,6 @@ begin
 	-- advance the clock 5 seconds
 	update system_time
 	set current_time = current_time + interval '5' second;
-
-	commit;
 end;
 /
 
@@ -255,17 +251,18 @@ begin
 	update product
 	set amount = :new.amount
 	where auction_id = :new.auction_id;
-
-	commit;
 end;
 /
 
 -- Test the triggers
-select * from system_time;
-insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user3', to_date('04/03/2013 11:59:00', 'MM/DD/YYYY HH24:MI:SS'), 1);
-select * from system_time;
+select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
+insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user1', to_date('04/03/2013 11:59:00', 'MM/DD/YYYY HH24:MI:SS'), 1);
+select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
 insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user4', to_date('04/03/2013 11:59:05', 'MM/DD/YYYY HH24:MI:SS'), 1);
-select * from system_time;
+select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
+
+insert into bidlog values (bidlog_bidsn_sequence.nextval, 0, 'user4', to_date('04/03/2013 11:59:10', 'MM/DD/YYYY HH24:MI:SS'), 180);
+insert into bidlog values (bidlog_bidsn_sequence.nextval, 1, 'user4', to_date('04/03/2013 11:59:15', 'MM/DD/YYYY HH24:MI:SS'), 185);
 
 -- * Selling products
 -- TODO
@@ -273,7 +270,7 @@ select * from system_time;
 -- * Suggestions
 --    - Customer X: 'user1'
 -- FIXME
-select distinct auction_id
+select distinct product.auction_id
 from product join bidlog
 on product.auction_id = bidlog.auction_id
 where status = 'underauction' and bidder in (
@@ -338,7 +335,5 @@ begin
 	update product
 	set status = 'close'
 	where status = 'underauction' and sell_date <= :new.current_time;
-
-	commit;
 end;
 /
