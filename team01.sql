@@ -76,19 +76,25 @@ create table bidlog(
 		initially immediate deferrable,
 	constraint fk_bidlog_bidder foreign key (bidder) references customer(login)
 		initially immediate deferrable
-	--
-	-- TODO
---	constraint check_highest_bid
---		check (
---			case (select distinct amount from product where product.auction_id = auction_id)
---			when is null then
---				amount >= (select min_price from product where product.auction_id = auction_id)
---			else
---				amount > (select amount from product where product.auction_id = auction_id)
---			end 
---		)
---		initially immediate deferrable
 );	
+-- use a trigger to enforce all new bids being > previous amount
+create or replace trigger tri_checkHighestBid
+before insert
+on bidlog
+for each row
+declare
+	old_highest int;
+begin
+	select max(amount)
+	into old_highest 
+	from product 
+	where product.auction_id = :new.auction_id;
+
+	if :new.amount <= old_highest and old_highest is not null then
+		raise_application_error(-20000, 'Invalid bid amount');
+	end if;
+end;
+/
 
 create table category(
 	name varchar2(20) not null,
@@ -257,13 +263,15 @@ end;
 
 -- Test the triggers
 select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
-insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user1', to_date('04/03/2013 11:59:00', 'MM/DD/YYYY HH24:MI:SS'), 1);
+insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user4', to_date('04/03/2013 11:59:00', 'MM/DD/YYYY HH24:MI:SS'), 1);
 select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
-insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user4', to_date('04/03/2013 11:59:05', 'MM/DD/YYYY HH24:MI:SS'), 1);
+insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user1', to_date('04/03/2013 11:59:05', 'MM/DD/YYYY HH24:MI:SS'), 2);
+select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
+insert into bidlog values (bidlog_bidsn_sequence.nextval, 2, 'user4', to_date('04/03/2013 11:59:10', 'MM/DD/YYYY HH24:MI:SS'), 2);
 select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') from system_time;
 
-insert into bidlog values (bidlog_bidsn_sequence.nextval, 0, 'user4', to_date('04/03/2013 11:59:10', 'MM/DD/YYYY HH24:MI:SS'), 180);
-insert into bidlog values (bidlog_bidsn_sequence.nextval, 1, 'user4', to_date('04/03/2013 11:59:15', 'MM/DD/YYYY HH24:MI:SS'), 185);
+insert into bidlog values (bidlog_bidsn_sequence.nextval, 0, 'user4', to_date('04/03/2013 11:59:15', 'MM/DD/YYYY HH24:MI:SS'), 180);
+insert into bidlog values (bidlog_bidsn_sequence.nextval, 1, 'user4', to_date('04/03/2013 11:59:20', 'MM/DD/YYYY HH24:MI:SS'), 185);
 
 -- * Selling products
 create or replace function Second_Highest_Bid(auction_id in int)
@@ -335,8 +343,7 @@ end;
 
 -- * Suggestions
 --    - Customer X: 'user1'
--- TODO: order by desirability
-select distinct product.auction_id
+select distinct product.auction_id as suggested_auction, count(distinct bidlog.bidder) as num_bid_friends
 from product join bidlog
 on product.auction_id = bidlog.auction_id
 where status = 'underauction' and bidder in (
@@ -355,7 +362,9 @@ where status = 'underauction' and bidder in (
 	select distinct auction_id
 	from bidlog
 	where bidder = 'user1'
-);
+)
+group by product.auction_id
+order by count(distinct bidlog.bidder) desc;
 
 -- # Administrator Interface
 --
