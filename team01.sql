@@ -77,21 +77,29 @@ create table bidlog(
 	constraint fk_bidlog_bidder foreign key (bidder) references customer(login)
 		initially immediate deferrable
 );	
--- use a trigger to enforce all new bids being > previous amount
+-- use a trigger to enforce all new bids being > previous amount and >= min price
 create or replace trigger tri_checkHighestBid
 before insert
 on bidlog
 for each row
 declare
 	old_highest int;
+	min_bid int;
 begin
-	select max(amount)
+	select amount
 	into old_highest 
 	from product 
 	where product.auction_id = :new.auction_id;
 
-	if :new.amount <= old_highest and old_highest is not null then
-		raise_application_error(-20000, 'Invalid bid amount');
+	select min_price
+	into min_bid
+	from product
+	where product.auction_id = :new.auction_id;
+
+	if old_highest is not null and :new.amount <= old_highest then
+		raise_application_error(-20000, 'Bid amount must be greater than the previous bid');
+	elsif old_highest is null and :new.amount < min_bid then
+		raise_application_error(-20000, 'Bid amount must be greater than or equal to the minimum price');
 	end if;
 end;
 /
