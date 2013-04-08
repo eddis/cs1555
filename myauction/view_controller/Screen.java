@@ -1,10 +1,11 @@
 package myauction.view_controller;
 
 import java.awt.Point;
+import java.sql.*;
 import myauction.CLI;
 import myauction.CLIObject;
+import myauction.Session;
 
-// TODO: add status bar along top that will contain the "logout" option, amongst others
 public class Screen extends CLI {
 	protected static final int WIDTH = 80;
 	protected static final int HEIGHT = 25;
@@ -18,10 +19,13 @@ public class Screen extends CLI {
 	public static final int VIEW_ONGOING = 6;
 	public static final int VIEW_CLOSED = 7;
 
+	protected Session session;
 	private CLIObject statusBox;
 
-	public Screen() {
+	public Screen(Session session) {
 		super(WIDTH, HEIGHT);
+
+		this.session = session;
 
 		CLIObject borderTop = new CLIObject(WIDTH, 1);
 		CLIObject borderBottom = new CLIObject(WIDTH, 1);
@@ -35,9 +39,9 @@ public class Screen extends CLI {
 			borderRight.setLine(i, "|");
 		}
 
-		CLIObject statusBox = new CLIObject(WIDTH, 2);
-		statusBox.setLine(0, "                                                                    Quit (q) ");
-		statusBox.setLine(1, "-----------------------------------------------------------------------------");
+		statusBox = new CLIObject(WIDTH, 2);
+		statusBox.setLine(0, "                                                                  Quit (q) ");
+		statusBox.setLine(1, "---------------------------------------------------------------------------");
 
 		CLIObject prompt = new CLIObject(WIDTH, 1);
 		prompt.setLine(0, ">");
@@ -46,7 +50,7 @@ public class Screen extends CLI {
 		addScreenObject(borderLeft, new Point(0, 1));
 		addScreenObject(borderRight, new Point(78, 1));
 		addScreenObject(borderBottom, new Point(0, 23));
-		addScreenObject(statusBox, new Point(1, 1));
+		addScreenObject(statusBox, new Point(2, 1));
 		addScreenObject(prompt, new Point(0, 24));
 	}
 
@@ -67,7 +71,9 @@ public class Screen extends CLI {
 		// place cursor back where it was before prompt
 		System.out.print(String.format("%c[%dE", escCode, 1));
 	
+		// if the user wants to exit at any point, let them!
 		if (input.equals("q") || input.equals("Q") || input.equals("quit")) {
+			session.close();
 			System.exit(0);
 		}
 
@@ -75,7 +81,7 @@ public class Screen extends CLI {
 	}
 
 	public void updateStatus(String statusText) {
-		int difference = 68 - statusText.length();
+		int difference = 65 - statusText.length();
 		String line = statusText;
 		for (int i = 0; i < difference; i++) {
 			line += " ";

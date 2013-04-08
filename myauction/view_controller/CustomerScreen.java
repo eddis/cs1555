@@ -1,18 +1,22 @@
 package myauction.view_controller;
 
 import java.awt.Point;
+import java.sql.*;
 import java.util.ArrayList;
 import myauction.CLIObject;
 import myauction.model.Product;
+import myauction.Session;
+import myauction.queries.QueryLoader;
 
 public class CustomerScreen extends Screen {
 	private CLIObject productsBox;
 	private CLIObject myAuctionsBox;
 	private CLIObject suggestionsBox;
 	private ArrayList<Product> suggestedProducts;
+	private static PreparedStatement listSuggestedStatement = null;
 
-	public CustomerScreen() {
-		super();
+	public CustomerScreen(Session session) {
+		super(session);
 
 		productsBox = new CLIObject(WIDTH, 6);
 		productsBox.setLine(0, "---Products-------------");
@@ -58,6 +62,8 @@ public class CustomerScreen extends Screen {
 	public int run() {
 		int nextScreen = CUSTOMER;
 
+		findSuggestions();
+
 		draw();
 
 		int option;
@@ -83,5 +89,28 @@ public class CustomerScreen extends Screen {
 		}
 
 		return nextScreen;
+	}
+
+	public void findSuggestions() {
+		try {
+			if (listSuggestedStatement == null) {
+				listSuggestedStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("queries/listSuggested.sql"));
+			}
+
+			listSuggestedStatement.setString(1, session.getUsername());
+			listSuggestedStatement.setString(2, session.getUsername());
+
+			ResultSet results = listSuggestedStatement.executeQuery();
+			while (results.next()) {
+				int suggestedAuctionId = results.getInt("suggested_auction");
+				Product suggestedProduct = new Product(session.getDb(), suggestedAuctionId);
+				addSuggestedProduct(suggestedProduct);
+			}
+		} catch (SQLException e) {
+			while (e != null) {
+				System.out.println(e.toString());
+				e = e.getNextException();
+			}
+		}
 	}
 }
