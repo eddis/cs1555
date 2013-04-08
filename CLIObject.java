@@ -39,8 +39,4 @@ public class CLIObject {
 
 		return line.length();
 	}
-
-	public Point cursorOffset() {
-		return 0;
-	}
 }

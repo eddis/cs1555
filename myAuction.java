@@ -1,20 +1,35 @@
-import java.awt.Point;
-import java.util.Scanner;
-
 public class myAuction {
 	public static void main(String[] args) {
-		LoginScreen screen = new LoginScreen();
-		Scanner in = new Scanner(System.in);
-
+		Screen screen = new LoginScreen();
 		while (true) {
-			screen.draw();
-			//screen.input();
+			int nextScreen = screen.run();
 
-			char escCode = 0x1B;
-			int row = 10; int column = 10;
-			System.out.print(String.format("%c[%d;%df",escCode,row,column));
-			
-			in.next();
+			switch (nextScreen) {
+			case Screen.LOGIN:
+				screen = new LoginScreen();
+				break;
+			case Screen.CUSTOMER:
+				screen = new CustomerScreen();
+				break;
+			case Screen.ADMIN:
+				screen = new AdminScreen();
+				break;
+			case Screen.BROWSE_PRODUCTS:
+				screen = new BrowseProductsScreen();
+				break;
+			case Screen.SEARCH_PRODUCTS:
+				screen = new SearchProductsScreen();
+				break;
+			case Screen.START_AUCTION:
+				screen = new StartAuctionScreen();
+				break;
+			case Screen.VIEW_ONGOING:
+				screen = new ViewOngoingScreen();
+				break;
+			case Screen.VIEW_CLOSED:
+				screen = new ViewClosedScreen();
+				break;
+			}
 		}
 	}
 }

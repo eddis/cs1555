@@ -1,19 +1,20 @@
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class CLI {
 	private int width;
 	private int height;
 	private ArrayList<CLIObject> screenObjects;
 	private ArrayList<Point> screenObjectCoords;
-	private int cursor;
+	protected Scanner in;
 
 	public CLI(int width, int height) {
 		this.width = width;
 		this.height = height;
 		screenObjects = new ArrayList<CLIObject>();
 		screenObjectCoords = new ArrayList<Point>();
-		cursor = 0;
+	 	in = new Scanner(System.in);
 	}
 
 	/* Adds a screen object to the interface and specifies its coordinate in it
@@ -41,6 +42,11 @@ public class CLI {
     		coords.set(smallestIndex, tempCoord);
     		screenObjects.set(smallestIndex, tempScreenObject);
     	}
+	}
+
+	public void clear() {
+		char escCode = 0x1B;
+		System.out.print(String.format("%c[%dF", escCode, height));
 	}
 
 	public void draw() {
