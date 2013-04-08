@@ -1,3 +1,5 @@
+import myauction.view_controller.*;
+
 public class myAuction {
 	public static void main(String[] args) {
 		Screen screen = new LoginScreen();
