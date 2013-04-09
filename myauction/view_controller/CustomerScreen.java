@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import myauction.CLIObject;
 import myauction.model.Product;
 import myauction.Session;
-import myauction.queries.QueryLoader;
+import myauction.QueryLoader;
 
 public class CustomerScreen extends Screen {
 	private CLIObject productsBox;
@@ -21,24 +21,25 @@ public class CustomerScreen extends Screen {
 		productsBox = new CLIObject(WIDTH, 6);
 		productsBox.setLine(0, "---Products-------------");
 		productsBox.setLine(1, "|                      |");
-		productsBox.setLine(2, "| Browse Products (1)  |");
-		productsBox.setLine(3, "| Search Products (2)  |");
+		productsBox.setLine(2, "| Browse Products (b)  |");
+		productsBox.setLine(3, "| Search Products (s)  |");
 		productsBox.setLine(4, "|                      |");
 		productsBox.setLine(5, "------------------------");
 
 		myAuctionsBox = new CLIObject(WIDTH, 7);
 		myAuctionsBox.setLine(0, "---My Auctions---------------");
 		myAuctionsBox.setLine(1, "|                           |");
-		myAuctionsBox.setLine(2, "| Start Auction (3)         |");
-		myAuctionsBox.setLine(3, "| View Ongoing Auctions (4) |");
-		myAuctionsBox.setLine(4, "| View Closed Auctions (5)  |");
+		myAuctionsBox.setLine(2, "| Start Auction (n)         |");
+		myAuctionsBox.setLine(3, "| View Ongoing Auctions (o) |");
+		myAuctionsBox.setLine(4, "| View Closed Auctions (c)  |");
 		myAuctionsBox.setLine(5, "|                           |");
 		myAuctionsBox.setLine(6, "-----------------------------");
 
 		suggestionsBox = new CLIObject(WIDTH, 20);
 		suggestionsBox.setLine(0, "|");
 		suggestionsBox.setLine(1, "|          Products You Might Like");
-		for (int i = 2; i < 20; i++) {
+		suggestionsBox.setLine(2, "|       Name | Price | Bids | Ends on");
+		for (int i = 3; i < 20; i++) {
 			suggestionsBox.setLine(i, "|");
 		}
 
@@ -52,36 +53,44 @@ public class CustomerScreen extends Screen {
 	public void addSuggestedProduct(Product product) {
 		suggestedProducts.add(product);
 
-		int line = (suggestedProducts.size() - 1) % 2 + suggestedProducts.size() - 1 + 3;
-		suggestionsBox.setLine(line, "| " + product.name + " | "
+		int line = (suggestedProducts.size() - 1) % 2 + suggestedProducts.size() - 1 + 4;
+		suggestionsBox.setLine(line, "| " + product.getDisplayName() + " | $"
 										  + product.getPrice() + " | " 
-										  + product.getBids() + " | Ends on "
-										  + product.getEndDate());
+										  + product.getBids() + " | "
+										  + product.getEndDate() + " ("
+										  + product.auctionId + ")");
 	}
 
 	public int run() {
 		int nextScreen = CUSTOMER;
 
+		findClosedAuctions();
 		findSuggestions();
 
 		draw();
 
-		int option;
+		String option;
 		try {
-			option = Integer.parseInt(getInput());
+			option = getInput();
 
-			switch (option) {
-			case 1:
+			if (option.equals("b")) {
 				nextScreen = BROWSE_PRODUCTS;
-			case 2:
+			} else if (option.equals("s")) {
 				nextScreen = SEARCH_PRODUCTS;
-			case 3:
+			} else if (option.equals("n")) {
 				nextScreen = START_AUCTION;
-			case 4:
+			} else if (option.equals("o")) {
 				nextScreen = VIEW_ONGOING;
-			case 5:
+			} else if (option.equals("c")) {
 				nextScreen = VIEW_CLOSED;
+			} else {
+				int suggestedProductAuctionId = Integer.parseInt(option);
+				session.setSelectedAuctionId(suggestedProductAuctionId);
+
+				nextScreen = AUCTION;
 			}
+
+
 		} catch (Exception e) {
 			nextScreen = CUSTOMER;
 		} finally {
@@ -91,10 +100,14 @@ public class CustomerScreen extends Screen {
 		return nextScreen;
 	}
 
+	public void findClosedAuctions() {
+		// TODO: looks for closed auctions and updates the status bar
+	}
+
 	public void findSuggestions() {
 		try {
 			if (listSuggestedStatement == null) {
-				listSuggestedStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("queries/listSuggested.sql"));
+				listSuggestedStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listSuggested.sql"));
 			}
 
 			listSuggestedStatement.setString(1, session.getUsername());

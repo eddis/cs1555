@@ -12,7 +12,8 @@ public class myAuction {
 			new SearchProductsScreen(session),
 			new StartAuctionScreen(session),
 			new ViewOngoingScreen(session),
-			new ViewClosedScreen(session)
+			new ViewClosedScreen(session),
+			new AuctionScreen(session)
 		};
 
 		Screen screen = screens[Screen.LOGIN];

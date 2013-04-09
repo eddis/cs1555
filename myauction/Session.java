@@ -7,6 +7,7 @@ public class Session {
 	private String username;
 	private String password;
 	private Connection db;
+	private int selectedAuctionId;
 
 	public Session() {
 		try {
@@ -23,12 +24,20 @@ public class Session {
 		this.password = password;
 	}
 
+	public void setSelectedAuctionId(int selectedAuctionId) {
+		this.selectedAuctionId = selectedAuctionId;
+	}
+
 	public String getUsername() {
 		return username;
 	}
 
 	public String getPassword() {
 		return password;
+	}
+
+	public int getSelectedAuctionId() {
+		return selectedAuctionId;
 	}
 
 	public Connection getDb() {

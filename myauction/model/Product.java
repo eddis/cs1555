@@ -54,6 +54,13 @@ public class Product {
 		}
 	}
 
+	public String getDisplayName() {
+		if (name.length() > 12) {
+			return name.substring(0, 11);
+		}
+		return name;
+	}
+
 	public String getPrice() {
 		if (amount == 0) {
 			return "Min. Price: " + minPrice;

@@ -19,4 +19,4 @@ where status = 'underauction' and bidder in (
 	where bidder = ?
 )
 group by product.auction_id
-order by count(distinct bidlog.bidder) desc;
+order by count(distinct bidlog.bidder) desc

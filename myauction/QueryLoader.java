@@ -1,4 +1,4 @@
-package myauction.queries;
+package myauction;
 
 import java.io.FileReader;
 import java.util.Scanner;
@@ -12,9 +12,11 @@ public class QueryLoader {
 			file = new Scanner(new FileReader(fileName));
 
 			while (file.hasNextLine()) {
-				query += file.nextLine();
+				query += file.nextLine() + " ";
 			}
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			System.out.println(e);
+		}
 
 		return query;
 	}

@@ -18,6 +18,7 @@ public class Screen extends CLI {
 	public static final int START_AUCTION = 5;
 	public static final int VIEW_ONGOING = 6;
 	public static final int VIEW_CLOSED = 7;
+	public static final int AUCTION = 8;
 
 	protected Session session;
 	private CLIObject statusBox;
