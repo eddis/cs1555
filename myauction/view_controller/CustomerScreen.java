@@ -13,6 +13,7 @@ public class CustomerScreen extends Screen {
 	private CLIObject myAuctionsBox;
 	private CLIObject suggestionsBox;
 	private ArrayList<Product> suggestedProducts;
+	private static PreparedStatement findClosedStatement = null;
 	private static PreparedStatement listSuggestedStatement = null;
 
 	public CustomerScreen(Session session) {
@@ -64,8 +65,8 @@ public class CustomerScreen extends Screen {
 	public int run() {
 		int nextScreen = CUSTOMER;
 
-		findClosedAuctions();
-		findSuggestions();
+		findClosed();
+		listSuggestions();
 
 		draw();
 
@@ -89,8 +90,6 @@ public class CustomerScreen extends Screen {
 
 				nextScreen = AUCTION;
 			}
-
-
 		} catch (Exception e) {
 			nextScreen = CUSTOMER;
 		} finally {
@@ -100,11 +99,29 @@ public class CustomerScreen extends Screen {
 		return nextScreen;
 	}
 
-	public void findClosedAuctions() {
-		// TODO: looks for closed auctions and updates the status bar
+	public void findClosed() {
+		// looks for closed auctions and updates the status bar
+		try {
+			if (findClosedStatement == null) {
+				findClosedStatement = session.getDb().prepareStatement("select count(*) as num_closed from customer join product on customer.login = product.seller where customer.login = ? and product.status = 'close'");
+			}
+
+			findClosedStatement.setString(1, session.getUsername());
+
+			ResultSet results = findClosedStatement.executeQuery();
+			// FIXME: account for empty
+			results.next();
+			int closedAuctionCount = results.getInt("num_closed");
+			updateStatus("You have " + closedAuctionCount + " closed auction(s) that need tending to!");
+		} catch (SQLException e) {
+			while (e != null) {
+				System.out.println(e.toString());
+				e = e.getNextException();
+			}
+		}
 	}
 
-	public void findSuggestions() {
+	public void listSuggestions() {
 		try {
 			if (listSuggestedStatement == null) {
 				listSuggestedStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listSuggested.sql"));
