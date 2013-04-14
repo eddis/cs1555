@@ -21,13 +21,15 @@ public class BrowseProductsScreen extends Screen {
 	private static PreparedStatement parentCategoryStatement = null;
 	private static PreparedStatement listByHighestStatement = null;
 	private static PreparedStatement listByAlphabetStatement = null;
+	private static PreparedStatement listByHighestAllStatement = null;
+	private static PreparedStatement listByAlphabetAllStatement = null;
 
 	public BrowseProductsScreen(Session session) {
 		super(session);
 
 		CLIObject headerBox = new CLIObject(WIDTH, 2);
-		headerBox.setLine(0, " Previous (<)                   Browsing Products                           ");
-		headerBox.setLine(1, " ---------------------------------------------------------------------------");
+		headerBox.setLine(0, " Previous (<)                 Browsing Products                              ");
+		headerBox.setLine(1, "-----------------------------------------------------------------------------");
 
 		sortByBox = new CLIObject(WIDTH, 6);
 		sortByBox.setLine(0, "                      ");
@@ -35,7 +37,7 @@ public class BrowseProductsScreen extends Screen {
 		sortByBox.setLine(2, " | | Highest Bid (h)  ");
 		sortByBox.setLine(3, " |X| Alphabetical (a) ");
 		sortByBox.setLine(4, "                      ");
-		sortByBox.setLine(5, " ---------------------");
+		sortByBox.setLine(5, "----------------------");
 
 		CLIObject sortCategoryDivider = new CLIObject(WIDTH, 6);
 		sortCategoryDivider.setLine(0, "|");
@@ -48,16 +50,16 @@ public class BrowseProductsScreen extends Screen {
 		categoriesBox = new CLIObject(WIDTH, 6);
 		categoriesBox.setLine(0, "                                                      ");
 		categoriesBox.setLine(1, "                         Category                     ");
-		categoriesBox.setLine(2, " * <None>                                      Up (u) ");
+		categoriesBox.setLine(2, " * <None>                            Up To Parent (u) ");
 		categoriesBox.setLine(3, "                                                      ");
 		categoriesBox.setLine(4, "                                                      ");
-		categoriesBox.setLine(5, "----------------------------------------------------- ");
+		categoriesBox.setLine(5, "------------------------------------------------------");
 
 		productsBox = new CLIObject(WIDTH, 16);
 		productsBox.setLine(0, "");
-		productsBox.setLine(1, "No products to show.");
+		productsBox.setLine(1, " No products to show.");
 		for (int i = 2; i < 16; i++) {
-			productsBox.setLine(i, "                                                                              ");
+			productsBox.setLine(i, "");
 		}
 
 		addScreenObject(headerBox, new Point(originX, originY));
@@ -66,29 +68,26 @@ public class BrowseProductsScreen extends Screen {
 		addScreenObject(categoriesBox, new Point(originX + 23, originY + 2));
 		addScreenObject(productsBox, new Point(originX, originY + 7));
 
-		sortByHighest = false;
-		curCategory = "";
-		childCategories = null;
-		products = new ArrayList<Product>();
+		reset();
 	}
 
 	public void updateCategories() {
 		if (curCategory.equals("")) {
-			categoriesBox.setLine(2, " * <None>                                      Up (u) ");
+			categoriesBox.setLine(2, " * <None>                            Up To Parent (u) ");
 
 			childCategories = getRootCategories();
 		} else {
 			String line = " * " + curCategory;
-			for (int i = curCategory.length(); i < 38; i++) {
+			for (int i = curCategory.length(); i < 28; i++) {
 				line += " ";
 			}
-			line += "Up (u) ";
+			line += "Up To Parent (u) ";
 			categoriesBox.setLine(2, line);
 
 			childCategories = getChildCategories(curCategory);
 		}
 
-		String[] childLines = new String[]{"", ""};
+		String[] childLines = new String[]{" ", " "};
 		int curLine = 0;
 		for (int i = 0; i < childCategories.size(); i++) {
 			if (childLines[curLine].length() + childCategories.get(i).length() > 53) {
@@ -112,8 +111,6 @@ public class BrowseProductsScreen extends Screen {
 	}
 
 	public void listProducts() {
-		products = new ArrayList<Product>();
-
 		try {
 			ResultSet results;
 
@@ -125,10 +122,28 @@ public class BrowseProductsScreen extends Screen {
 				listByAlphabetStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listByAlphabet.sql"));
 			}
 
+			if (listByHighestAllStatement == null) {
+				listByHighestAllStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listByHighestAll.sql"));
+			}
+
+			if (listByAlphabetAllStatement == null) {
+				listByAlphabetAllStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listByAlphabetAll.sql"));
+			}
+
 			if (sortByHighest) {
-				results = listByHighestStatement.executeQuery();
+				if (curCategory.equals("")) {
+					results = listByHighestAllStatement.executeQuery();
+				} else {
+					listByHighestStatement.setString(1, curCategory);
+					results = listByHighestStatement.executeQuery();
+				}
 			} else {
-				results = listByAlphabetStatement.executeQuery();
+				if (curCategory.equals("")) {
+					results = listByAlphabetAllStatement.executeQuery();
+				} else {
+					listByAlphabetStatement.setString(1, curCategory);
+					results = listByAlphabetStatement.executeQuery();
+				}
 			}
 
 			while (results.next()) {
@@ -143,14 +158,10 @@ public class BrowseProductsScreen extends Screen {
 			}
 		}
 
-		// clear product lines
-		for (int i = 2; i < 16; i++) {
-			productsBox.setLine(i, "");
-		}
-
 		if (products.size() <= 0) {
-			productsBox.setLine(1, "No products to show.");
+			productsBox.setLine(1, " No products to show.");
 		} else {
+			productsBox.setLine(1, " Name | Desc. | Amount | Min. Price | Start Date | Num. Days | Seller");
 			for (int i = 0; i < products.size(); i++) {
 				Product product = products.get(i);
 				int lineOffset = i % 2 + i;
@@ -244,8 +255,17 @@ public class BrowseProductsScreen extends Screen {
 		return parent;
 	}
 
+	public void reset() {
+		sortByHighest = false;
+		curCategory = "";
+		childCategories = null;
+		products = new ArrayList<Product>();
+	}
+
 	public int run() {
 		int nextScreen = BROWSE_PRODUCTS;
+
+		reset();
 
 		boolean finishedHere = false;
 		while (!finishedHere) {
@@ -285,8 +305,6 @@ public class BrowseProductsScreen extends Screen {
 			} catch (Exception e) {
 				updateStatus("YOU DUN GOOFED");
 				nextScreen = BROWSE_PRODUCTS;
-			} finally {
-				clear();
 			}
 		}
 
