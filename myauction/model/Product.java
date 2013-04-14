@@ -122,4 +122,29 @@ public class Product {
 
 		return endDate;
 	}
+
+	public String getHighestBidder() {
+		String highestBidder = null;
+		if (status.equals('sold')) {
+			return buyer;
+		}
+		try {
+			highestBidderStatement = db.prepareStatement(QueryLoader.loadQuery("myauction/queries/highestBidder.sql"));
+			highestBidderStatement.setInt(1, auctionId);
+			ResultSet results = highestBidderStatement.executeQuery();
+			results.next();
+			highestBidder = results.getString("highest_bidder");
+
+		} catch (SQLException e) {
+			while (e != null ) {
+				debug.println(e.toString());
+				debug.flush();
+				e = e.getNextException();
+			}
+		}
+		if (highestBidder == null) {
+			highestBidder = "";
+		}
+		return highestBidder;
+	}
 }

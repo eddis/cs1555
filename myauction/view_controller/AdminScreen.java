@@ -25,17 +25,17 @@ public class AdminScreen extends Screen {
 		statsBox = new CLIObject(WIDTH, 6);
 		statsBox.setLine(0, "---Statistics----------------");
 		statsBox.setLine(1, "|                           |");
-		statsBox.setLine(2, "| Product Statistics (s)    |");
+		statsBox.setLine(2, "| Product Statistics (p)    |");
 		statsBox.setLine(3, "| Trends (t)                |");
 		statsBox.setLine(4, "|                           |");
 		statsBox.setLine(5, "-----------------------------");
 
 
-		addScreenObject(tasksBox, new Point(3, 6));
-		addScreenObject(statsBox, new Point(3, 13));
+		addScreenObject(tasksBox, new Point(originX + 3, originY + 6));
+		addScreenObject(statsBox, new Point(originX + 3, originY + 13));
 	}	
 	
-	
+
 
 	public int run() {
 		int nextScreen = ADMIN;
@@ -49,7 +49,7 @@ public class AdminScreen extends Screen {
 			nextScreen = NEW_USER;
 		} else if (option.equals("u")) {
 			nextScreen = UPDATE_TIME;
-		} else if (option.equals("s")) {
+		} else if (option.equals("p")) {
 			nextScreen = PRODUCT_STATS;
 		} else if (option.equals("t")) {
 			nextScreen = TRENDS;

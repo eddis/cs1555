@@ -9,17 +9,17 @@ public class NewUserScreen extends Screen {
 	private CLIObject createUserBox;
 	private CLIObject headerBox;
 	private String userTable;
-	private static PreparedStatement checkEmailStatement = null;
-	private static PreparedStatement checkUsernameStatement = null;
-	private static PreparedStatement addUserStatement = null;
+	private PreparedStatement checkEmailStatement = null;
+	private PreparedStatement checkUsernameStatement = null;
+	private PreparedStatement addUserStatement = null;
 
 
 
 	public NewUserScreen(Session session) {
 		super(session);
 		headerBox = new CLIObject(WIDTH, 2);
-		headerBox.setLine(0, "Previous (<)                    Create New User                               ");
-		headerBox.setLine(1, "------------------------------------------------------------------------------");
+		headerBox.setLine(0, "Previous (<)                  Create New User                               ");
+		headerBox.setLine(1, "----------------------------------------------------------------------------");
 
 
 		createUserBox = new CLIObject(WIDTH, 10);
@@ -34,71 +34,58 @@ public class NewUserScreen extends Screen {
 		createUserBox.setLine(8, "|                                          |");
 		createUserBox.setLine(9, "--------------------------------------------");
 
-		addScreenObject(headerBox, new Point(1, 1));
-		addScreenObject(createUserBox, new Point(3, 6));
+		addScreenObject(headerBox, new Point(originX + 1, originY));
+		addScreenObject(createUserBox, new Point(originX + 2, originY + 5));
 
 
 	}
 
 	public int run() {
-		checkEmailStatement = null;
-		checkUsernameStatement = null;
-		addUserStatement = null;
+		reset();
 		draw();
 		String admin = getInput();
 		if (isPrevious(admin)) {
-			reset();
 			return ADMIN;
 		}
 		userTable = setAdministrator(admin);
-		clear();
 		
 		createUserBox.setLine(3, "| Name: |___________________               |");
 		draw();
 		String name = getInput();
 		if (isPrevious(name)) {
-			reset();
 			return ADMIN;
 		}
 		setName(name);
-		clear();
-
 		createUserBox.setLine(4, "| Email: |___________________               |");
 		draw();
 		String email = getInput();
 		if (isPrevious(email)) {
-			reset();
 			return ADMIN;
 		}
-		clear();
 		while(!checkEmail(email)) {
 			updateStatus(email + " is not a valid email, please choose another.");
 			draw();
 			email = getInput();
 			if (isPrevious(email)) {
-				reset();
 				return ADMIN;
 			}
-			clear();
 		}
 		setEmail(email);
 
-		
+
+		updateStatus("");
 		createUserBox.setLine(5, "| Address: |_____________________________  |");
 		draw();
 		String address = getInput();
 		if (isPrevious(address)){
-			reset();
-			return ADMIN;
+		\	return ADMIN;
 		}
 		setAddress(address);
-		clear();
 
 		createUserBox.setLine(6, "| Username: |_________                     |");
 		draw();
 		String username = getInput();
 		if (isPrevious(username)){
-			reset();
 			return ADMIN;
 		}
 		while(!checkUsername(username)) {
@@ -106,30 +93,31 @@ public class NewUserScreen extends Screen {
 			draw();
 			username = getInput();
 			if (isPrevious(username)){
-				reset();
 				return ADMIN;
 			}
-			clear();
 		}
 		setUsername(username);
-
+		updateStatus("");
 		createUserBox.setLine(7, "| Password: |_________                     |");
 		draw();
 		String password = getInput();
 		if (isPrevious(password)) {
-			reset();
 			return ADMIN;
 		}
 		setPassword(password);
 
 		int rowAdded = addUser(username, password, name, address, email);
 		if (rowAdded > 0){
-			updateStatus("You have added" + username + "successfully!");
+			updateStatus("You have added " + username + " successfully!");
 		}
+		reset();
 		return NEW_USER;
 		
 	}
 	public void reset(){
+		checkEmailStatement = null;
+		checkUsernameStatement = null;
+		addUserStatement = null;
 		setAdministrator("");
 		setName("");
 		setEmail("");
@@ -183,7 +171,7 @@ public class NewUserScreen extends Screen {
 
 	public void setName(String name) {
 		int difference = 20 -name.length();
-		String line = "| Name:  "+ name;
+		String line = "| Name: "+ name;
 		for(int i = 0; i < difference; i++) {
 			line += "_";
 		}
@@ -233,7 +221,7 @@ public class NewUserScreen extends Screen {
 	}
 
 	public void setAddress(String address) {
-		int difference = 20 -address.length();
+		int difference = 30 -address.length();
 		String line = "| Address: "+ address;
 		for (int i = 0; i < difference; i++) {
 			line += "_";
