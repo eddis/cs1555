@@ -7,6 +7,7 @@ import myauction.CLIObject;
 import myauction.Session;
 import myauction.QueryLoader;
 import myauction.model.Product;
+import myauction.helpers.Paginator;
 
 public class BrowseProductsScreen extends Screen {
 	private CLIObject sortByBox;
@@ -16,6 +17,8 @@ public class BrowseProductsScreen extends Screen {
 	private String curCategory;
 	private ArrayList<String> childCategories;
 	private ArrayList<Product> products;
+	private int curPage;
+	private Paginator<Product> paginator;
 	private static PreparedStatement rootCategoriesStatement = null;
 	private static PreparedStatement childCategoriesStatement = null;
 	private static PreparedStatement parentCategoryStatement = null;
@@ -55,10 +58,10 @@ public class BrowseProductsScreen extends Screen {
 		categoriesBox.setLine(4, "                                                      ");
 		categoriesBox.setLine(5, "------------------------------------------------------");
 
-		productsBox = new CLIObject(WIDTH, 16);
+		productsBox = new CLIObject(WIDTH, 12);
 		productsBox.setLine(0, "");
 		productsBox.setLine(1, " No products to show.");
-		for (int i = 2; i < 16; i++) {
+		for (int i = 2; i < 12; i++) {
 			productsBox.setLine(i, "");
 		}
 
@@ -66,7 +69,7 @@ public class BrowseProductsScreen extends Screen {
 		addScreenObject(sortByBox, new Point(originX, originY + 2));
 		addScreenObject(sortCategoryDivider, new Point(originX + 22, originY + 2));
 		addScreenObject(categoriesBox, new Point(originX + 23, originY + 2));
-		addScreenObject(productsBox, new Point(originX, originY + 7));
+		addScreenObject(productsBox, new Point(originX, originY + 8));
 
 		reset();
 	}
@@ -78,7 +81,7 @@ public class BrowseProductsScreen extends Screen {
 			childCategories = getRootCategories();
 		} else {
 			String line = " * " + curCategory;
-			for (int i = curCategory.length(); i < 28; i++) {
+			for (int i = curCategory.length(); i < 34; i++) {
 				line += " ";
 			}
 			line += "Up To Parent (u) ";
@@ -153,17 +156,26 @@ public class BrowseProductsScreen extends Screen {
 			}
 		} catch (SQLException e) {
 			while (e != null) {
-				System.out.println(e.toString());
+				debug.println(e.toString());
+				debug.flush();
 				e = e.getNextException();
 			}
 		}
 
+		for (Product product : products) {
+			debug.println(product.getDisplayName());
+		}
+		debug.flush();
+
 		if (products.size() <= 0) {
 			productsBox.setLine(1, " No products to show.");
 		} else {
-			productsBox.setLine(1, " Name | Desc. | Amount | Min. Price | Start Date | Num. Days | Seller");
-			for (int i = 0; i < products.size(); i++) {
-				Product product = products.get(i);
+			productsBox.setLine(0, " Name | Desc. | Amount | Min. Price | Start Date | Num. Days | Seller");
+			productsBox.setLine(1, "");
+
+			ArrayList<Product> productsOnPage = paginator.paginate(products, curPage, 4);
+			for (int i = 0; i < productsOnPage.size(); i++) {
+				Product product = productsOnPage.get(i);
 				int lineOffset = i % 2 + i;
 				productsBox.setLine(lineOffset + 2, product.getDisplayName() + " | "
 											   	  + product.getBriefDescription() + " | $"
@@ -174,8 +186,8 @@ public class BrowseProductsScreen extends Screen {
 											      + product.seller + " ("
 											      + product.auctionId + ")");
 			}
+			productsBox.setLine(11, paginator.getPageMenu(products, curPage, 4));
 		}
-
 	}
 
 	public ArrayList<String> getRootCategories() {
@@ -194,7 +206,8 @@ public class BrowseProductsScreen extends Screen {
 			}
 		} catch (SQLException e) {
 			while (e != null) {
-				System.out.println(e.toString());
+				debug.println(e.toString());
+				debug.flush();
 				e = e.getNextException();
 			}
 		}
@@ -218,7 +231,8 @@ public class BrowseProductsScreen extends Screen {
 			}
 		} catch (SQLException e) {
 			while (e != null) {
-				System.out.println(e.toString());
+				debug.println(e.toString());
+				debug.flush();
 				e = e.getNextException();
 			}
 		}
@@ -247,7 +261,8 @@ public class BrowseProductsScreen extends Screen {
 			}
 		} catch (SQLException e) {
 			while (e != null) {
-				System.out.println(e.toString());
+				debug.println(e.toString());
+				debug.flush();
 				e = e.getNextException();
 			}
 		}
@@ -260,6 +275,8 @@ public class BrowseProductsScreen extends Screen {
 		curCategory = "";
 		childCategories = null;
 		products = new ArrayList<Product>();
+		curPage = 1;
+		paginator = new Paginator<Product>();
 	}
 
 	public int run() {
@@ -288,9 +305,12 @@ public class BrowseProductsScreen extends Screen {
 					curCategory = getParentCategory(curCategory);
 				} else if (option.startsWith("c")) {
 					// select the child category at the given index and redisplay hierarchy
-					option = option.substring(1, option.length()-1);
+					option = option.substring(1, option.length());
 					int childCategory = Integer.parseInt(option);
 					curCategory = childCategories.get(childCategory);
+				} else if (option.startsWith("p")) {
+					option = option.substring(1, option.length());
+					curPage = Integer.parseInt(option);
 				} else if (option.startsWith("<")) {
 					// go back to the customer screen
 					nextScreen = CUSTOMER;
@@ -303,6 +323,7 @@ public class BrowseProductsScreen extends Screen {
 					finishedHere = true;
 				}
 			} catch (Exception e) {
+				debug.println(e.toString());
 				updateStatus("YOU DUN GOOFED");
 				nextScreen = BROWSE_PRODUCTS;
 			}

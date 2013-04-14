@@ -56,14 +56,14 @@ public class Product {
 
 	public String getDisplayName() {
 		if (name.length() > 12) {
-			return name.substring(0, 11);
+			return name.substring(0, 12);
 		}
 		return name;
 	}
 
 	public String getBriefDescription() {
 		if (description.length() > 15) {
-			return description.substring(0, 14);
+			return description.substring(0, 15);
 		}
 		return description;
 	}

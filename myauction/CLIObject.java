@@ -21,7 +21,7 @@ public class CLIObject {
 
 	public void setLine(int i, String line) {
 		if (line.length() > maxWidth) {
-			line = line.substring(0, maxWidth-1);
+			line = line.substring(0, maxWidth);
 		}
 		text[i] = line;
 	}

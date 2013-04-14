@@ -2,6 +2,7 @@ package myauction.view_controller;
 
 import java.awt.Point;
 import java.sql.*;
+import java.io.PrintStream;
 import myauction.CLI;
 import myauction.CLIObject;
 import myauction.Session;
@@ -24,6 +25,8 @@ public class Screen extends CLI {
 	protected int originY;
 	protected Session session;
 	private CLIObject statusBox;
+
+	protected PrintStream debug;
 
 	public Screen(Session session) {
 		super(WIDTH, HEIGHT);
@@ -58,6 +61,10 @@ public class Screen extends CLI {
 
 		originX = 1;
 		originY = 3;
+
+		try {
+			debug = new PrintStream("debug.txt");
+		} catch (Exception e) {}
 	}
 
 	public String getInput() {
