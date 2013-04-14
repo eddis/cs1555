@@ -47,11 +47,27 @@ public class CLI {
 	}
 
 	public void clear() {
+		// move the cursor back to the top of the screen
 		char escCode = 0x1B;
+		System.out.print(String.format("%c[%dF", escCode, height));
+	
+		// clear what was there before
+		String clearLine = "";
+		for (int i = 0; i < width; i++) {
+			clearLine += " ";
+		}
+
+		for (int i = 0; i < height; i++) {
+			System.out.println(clearLine);
+		}
+
+		// move the cursor back to the top of the screen
 		System.out.print(String.format("%c[%dF", escCode, height));
 	}
 
 	public void draw() {
+		clear();
+
 		ArrayList<Point> sortedScreenObjectCoords = new ArrayList(screenObjectCoords);
 		ArrayList<CLIObject> sortedScreenObjects = new ArrayList(screenObjects);
 		sortByX(sortedScreenObjectCoords, sortedScreenObjects);

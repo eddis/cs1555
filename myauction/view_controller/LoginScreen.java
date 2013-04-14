@@ -28,16 +28,15 @@ public class LoginScreen extends Screen {
 		draw();
 
 		String username = getInput();
-		setUsername(username);
 
-		clear();
+		setUsername(username);
 		loginBox.setLine(3, "| Password: |_________ |");
 		draw();
 
 		String password = getInput();
-		setPassword(password);
 
-		clear();
+		setPassword(password);
+		draw();
 
 		session.setUsername(username);
 		session.setPassword(password);

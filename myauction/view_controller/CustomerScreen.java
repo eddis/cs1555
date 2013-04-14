@@ -62,8 +62,14 @@ public class CustomerScreen extends Screen {
 										  + product.auctionId + ")");
 	}
 
+	public void reset() {
+		suggestedProducts = new ArrayList<Product>();
+	}
+
 	public int run() {
 		int nextScreen = CUSTOMER;
+
+		reset();
 
 		findClosed();
 		listSuggestions();
@@ -92,8 +98,6 @@ public class CustomerScreen extends Screen {
 			}
 		} catch (Exception e) {
 			nextScreen = CUSTOMER;
-		} finally {
-			clear();
 		}
 
 		return nextScreen;
