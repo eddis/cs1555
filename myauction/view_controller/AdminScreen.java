@@ -6,31 +6,57 @@ import myauction.CLIObject;
 import myauction.Session;
 
 public class AdminScreen extends Screen {
+    private CLIObject tasksBox;
+    private CLIObject statsBox;
+
+
 	public AdminScreen(Session session) {
 		super(session);
 
-		productsBox = new CLIObject(WIDTH, 6);
-		productsBox.setLine(0, "---Customers-------------");
-		productsBox.setLine(1, "|                      |");
-		productsBox.setLine(2, "| Browse Products (b)  |");
-		productsBox.setLine(3, "| Search Products (s)  |");
-		productsBox.setLine(4, "|                      |");
-		productsBox.setLine(5, "------------------------");
+		tasksBox = new CLIObject(WIDTH, 6);
+		tasksBox.setLine(0, "---Tasks---------------------");
+		tasksBox.setLine(1, "|                           |");
+		tasksBox.setLine(2, "| New User Registration (n) |");
+		tasksBox.setLine(3, "| Update System Time (u)    |");
+		tasksBox.setLine(4, "|                           |");
+		tasksBox.setLine(5, "-----------------------------");
 
-		suggestionsBox = new CLIObject(WIDTH, 20);
-		suggestionsBox.setLine(0, "|");
-		suggestionsBox.setLine(1, "|          Products You Might Like");
-		suggestionsBox.setLine(2, "|       Name | Price | Bids | Ends on");
-		for (int i = 3; i < 20; i++) {
-			suggestionsBox.setLine(i, "|");
-		}
 
-		addScreenObject(productsBox, new Point(3, 6));
-		addScreenObject(myAuctionsBox, new Point(3, 13));
-		addScreenObject(suggestionsBox, new Point(34, 3));
-	}
+		statsBox = new CLIObject(WIDTH, 6);
+		statsBox.setLine(0, "---Statistics----------------");
+		statsBox.setLine(1, "|                           |");
+		statsBox.setLine(2, "| Product Statistics (s)    |");
+		statsBox.setLine(3, "| Trends (t)                |");
+		statsBox.setLine(4, "|                           |");
+		statsBox.setLine(5, "-----------------------------");
+
+
+		addScreenObject(tasksBox, new Point(3, 6));
+		addScreenObject(statsBox, new Point(3, 13));
+	}	
 
 	public int run() {
-		return 0;
+		int nextScreen = ADMIN;
+
+		draw();
+
+		String option;
+		option = getInput();
+
+		if (option.equals("n")) {
+			nextScreen = NEW_USER;
+		} else if (option.equals("u")) {
+			nextScreen = UPDATE_TIME;
+		} else if (option.equals("s")) {
+			nextScreen = PRODUCT_STATS;
+		} else if (option.equals("t")) {
+			nextScreen = TRENDS;
+		} else {
+
+			nextScreen = ADMIN;
+		}
+
+
+		return nextScreen;
 	}
 }

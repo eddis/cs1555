@@ -13,7 +13,11 @@ public class myAuction {
 			new StartAuctionScreen(session),
 			new ViewOngoingScreen(session),
 			new ViewClosedScreen(session),
-			new AuctionScreen(session)
+			new AuctionScreen(session),
+			new NewUserScreen(session),
+			new UpdateTimeScreen(session),
+			new ProductStatsScreen(session),
+			new TrendsScreen(session)
 		};
 
 		Screen screen = screens[Screen.LOGIN];

@@ -19,6 +19,11 @@ public class Screen extends CLI {
 	public static final int VIEW_ONGOING = 6;
 	public static final int VIEW_CLOSED = 7;
 	public static final int AUCTION = 8;
+	public static final int NEW_USER = 9;
+	public static final int UPDATE_TIME = 10;
+	public static final int PRODUCT_STATS = 11;
+	public static final int TRENDS = 12;
+
 
 	protected Session session;
 	private CLIObject statusBox;
@@ -62,7 +67,7 @@ public class Screen extends CLI {
 		System.out.print(String.format("%c[%dG", escCode, 2));
 	
 		// get the user input
-		String input = in.next();
+		String input = in.nextLine();
 
 		// clear the input
 		System.out.print(String.format("%c[%dK", escCode, 0));
