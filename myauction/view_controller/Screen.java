@@ -20,6 +20,8 @@ public class Screen extends CLI {
 	public static final int VIEW_CLOSED = 7;
 	public static final int AUCTION = 8;
 
+	protected int originX;
+	protected int originY;
 	protected Session session;
 	private CLIObject statusBox;
 
@@ -53,6 +55,9 @@ public class Screen extends CLI {
 		addScreenObject(borderBottom, new Point(0, 23));
 		addScreenObject(statusBox, new Point(2, 1));
 		addScreenObject(prompt, new Point(0, 24));
+
+		originX = 1;
+		originY = 3;
 	}
 
 	public String getInput() {
@@ -73,7 +78,7 @@ public class Screen extends CLI {
 		System.out.print(String.format("%c[%dE", escCode, 1));
 	
 		// if the user wants to exit at any point, let them!
-		if (input.equals("q") || input.equals("Q") || input.equals("quit")) {
+		if (input.equals("q") || input.equals("Q")) {
 			session.close();
 			System.exit(0);
 		}
