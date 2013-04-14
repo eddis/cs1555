@@ -4,9 +4,9 @@ import java.sql.*;
 import oracle.jdbc.driver.OracleDriver;
 
 public class Session {
+	private Connection db;
 	private String username;
 	private String password;
-	private Connection db;
 	private int selectedAuctionId;
 
 	public Session() {

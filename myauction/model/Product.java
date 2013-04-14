@@ -61,6 +61,13 @@ public class Product {
 		return name;
 	}
 
+	public String getBriefDescription() {
+		if (description.length() > 15) {
+			return description.substring(0, 14);
+		}
+		return description;
+	}
+
 	public String getPrice() {
 		if (amount == 0) {
 			return "Min. Price: " + minPrice;

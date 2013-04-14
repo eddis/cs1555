@@ -34,6 +34,8 @@ public class AdminScreen extends Screen {
 		addScreenObject(tasksBox, new Point(3, 6));
 		addScreenObject(statsBox, new Point(3, 13));
 	}	
+	
+	
 
 	public int run() {
 		int nextScreen = ADMIN;
