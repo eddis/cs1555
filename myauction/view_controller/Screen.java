@@ -51,8 +51,8 @@ public class Screen extends CLI {
 		}
 
 		statusBox = new CLIObject(WIDTH, 2);
-		statusBox.setLine(0, "                                                                  Quit (q) ");
-		statusBox.setLine(1, "---------------------------------------------------------------------------");
+		statusBox.setLine(0, "                                                                    Quit (q) ");
+		statusBox.setLine(1, "-----------------------------------------------------------------------------");
 
 		CLIObject prompt = new CLIObject(WIDTH, 1);
 		prompt.setLine(0, ">");
@@ -61,7 +61,7 @@ public class Screen extends CLI {
 		addScreenObject(borderLeft, new Point(0, 1));
 		addScreenObject(borderRight, new Point(78, 1));
 		addScreenObject(borderBottom, new Point(0, 23));
-		addScreenObject(statusBox, new Point(2, 1));
+		addScreenObject(statusBox, new Point(1, 1));
 		addScreenObject(prompt, new Point(0, 24));
 
 		originX = 1;
