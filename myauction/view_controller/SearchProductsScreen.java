@@ -124,6 +124,8 @@ public class SearchProductsScreen extends Screen {
     }
 
 	public void listProducts() {
+		products = new ArrayList<Product>();
+		
 		try {
 			ResultSet results;
 
