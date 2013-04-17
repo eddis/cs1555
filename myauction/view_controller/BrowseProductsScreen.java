@@ -168,16 +168,17 @@ public class BrowseProductsScreen extends Screen {
 		debug.flush();
 
 		if (products.size() <= 0) {
+			productsBox.setLine(0, "");
 			productsBox.setLine(1, " No products to show.");
 		} else {
 			productsBox.setLine(0, " Name | Desc. | Amount | Min. Price | Start Date | Num. Days | Seller");
-			productsBox.setLine(1, "");
+			productsBox.setLine(1, " --------------------------------------------------------------------");
 
 			ArrayList<Product> productsOnPage = paginator.paginate(products, curPage, 4);
 			for (int i = 0; i < productsOnPage.size(); i++) {
 				Product product = productsOnPage.get(i);
-				int lineOffset = i % 2 + i;
-				productsBox.setLine(lineOffset + 2, product.getDisplayName() + " | "
+				int lineOffset = i * 2;
+				productsBox.setLine(lineOffset + 2, " " + product.getDisplayName() + " | "
 											   	  + product.getBriefDescription() + " | $"
 											      + product.amount + " | $"
 											      + product.minPrice + " | "
@@ -225,6 +226,8 @@ public class BrowseProductsScreen extends Screen {
 				childCategoriesStatement = session.getDb().prepareStatement("select name from category where parent_category = ?");
 			}
 
+			childCategoriesStatement.setString(1, category);
+
 			results = childCategoriesStatement.executeQuery();
 			while (results.next()) {
 				categories.add(results.getString("name"));
@@ -252,6 +255,8 @@ public class BrowseProductsScreen extends Screen {
 			if (parentCategoryStatement == null) {
 				parentCategoryStatement = session.getDb().prepareStatement("select parent_category from category where name = ?");
 			}
+
+			parentCategoryStatement.setString(1, category);
 
 			results = parentCategoryStatement.executeQuery();
 			results.next();
