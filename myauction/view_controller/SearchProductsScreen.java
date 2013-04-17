@@ -10,144 +10,131 @@ import myauction.model.Product;
 import myauction.helpers.Paginator;
 
 public class SearchProductsScreen extends Screen {
-	private CLIObject sortByBox;
-	private CLIObject categoriesBox;
+	private CLIObject searchBox;
 	private CLIObject productsBox;
-	private boolean sortByHighest;
-	private String curCategory;
-	private ArrayList<String> childCategories;
 	private ArrayList<Product> products;
+	private int cursorAt;
+	private String searchTerm1;
+	private String searchTerm2;
 	private int curPage;
 	private Paginator<Product> paginator;
-	private static PreparedStatement rootCategoriesStatement = null;
-	private static PreparedStatement childCategoriesStatement = null;
-	private static PreparedStatement parentCategoryStatement = null;
-	private static PreparedStatement listByHighestStatement = null;
-	private static PreparedStatement listByAlphabetStatement = null;
-	private static PreparedStatement listByHighestAllStatement = null;
-	private static PreparedStatement listByAlphabetAllStatement = null;
+	private static PreparedStatement listBySearchStatement = null;
 
 	public SearchProductsScreen(Session session) {
 		super(session);
 
 		CLIObject headerBox = new CLIObject(WIDTH, 2);
-		headerBox.setLine(0, " Previous (<)                   Search for Products                          ");
+		headerBox.setLine(0, " Previous (<)                    Searching Products                          ");
 		headerBox.setLine(1, "-----------------------------------------------------------------------------");
 
-		searchBox = new CLIObject(WIDTH, )
-		sortByBox = new CLIObject(WIDTH, 6);
-		sortByBox.setLine(0, "                      ");
-		sortByBox.setLine(1, "               ");
-		sortByBox.setLine(2, " | | Highest Bid (h)  ");
-		sortByBox.setLine(3, " |X| Alphabetical (a) ");
-		sortByBox.setLine(5, "----------------------");
+		searchBox = new CLIObject(WIDTH, 4);
+		searchBox.setLine(0, "");
+		searchBox.setLine(1, " Search for products containing: ______________ (s1) and ______________ (s2) ");
+		searchBox.setLine(2, "");
+		searchBox.setLine(3, "-----------------------------------------------------------------------------");
 
-		CLIObject sortCategoryDivider = new CLIObject(WIDTH, 6);
-		sortCategoryDivider.setLine(0, "|");
-		sortCategoryDivider.setLine(1, "|");
-		sortCategoryDivider.setLine(2, "|");
-		sortCategoryDivider.setLine(3, "|");
-		sortCategoryDivider.setLine(4, "|");
-		sortCategoryDivider.setLine(5, "-");
-
-		categoriesBox = new CLIObject(WIDTH, 6);
-		categoriesBox.setLine(0, "                                                      ");
-		categoriesBox.setLine(1, "                         Category                     ");
-		categoriesBox.setLine(2, " * <None>                            Up To Parent (u) ");
-		categoriesBox.setLine(3, "                                                      ");
-		categoriesBox.setLine(4, "                                                      ");
-		categoriesBox.setLine(5, "------------------------------------------------------");
-
-		productsBox = new CLIObject(WIDTH, 12);
+		productsBox = new CLIObject(WIDTH, 14);
 		productsBox.setLine(0, "");
 		productsBox.setLine(1, " No products to show.");
-		for (int i = 2; i < 12; i++) {
+		for (int i = 2; i < 14; i++) {
 			productsBox.setLine(i, "");
 		}
 
 		addScreenObject(headerBox, new Point(originX, originY));
-		addScreenObject(sortByBox, new Point(originX, originY + 2));
-		addScreenObject(sortCategoryDivider, new Point(originX + 22, originY + 2));
-		addScreenObject(categoriesBox, new Point(originX + 23, originY + 2));
-		addScreenObject(productsBox, new Point(originX, originY + 8));
+		addScreenObject(searchBox, new Point(originX, originY + 2));
+		addScreenObject(productsBox, new Point(originX, originY + 6));
 
 		reset();
 	}
 
-	public void updateCategories() {
-		if (curCategory.equals("")) {
-			categoriesBox.setLine(2, " * <None>                            Up To Parent (u) ");
+	public void updateSearchBox() {
+		String searchField1 = searchTerm1;
+		String searchField2 = searchTerm2;
 
-			childCategories = getRootCategories();
-		} else {
-			String line = " * " + curCategory;
-			for (int i = curCategory.length(); i < 34; i++) {
-				line += " ";
-			}
-			line += "Up To Parent (u) ";
-			categoriesBox.setLine(2, line);
+		switch (cursorAt) {
+		case 0:
+			searchField1 += "|";
+			break;
+		case 1:
+			searchField2 += "|";
+			break;
+		default:
 
-			childCategories = getChildCategories(curCategory);
 		}
 
-		String[] childLines = new String[]{" ", " "};
-		int curLine = 0;
-		for (int i = 0; i < childCategories.size(); i++) {
-			if (childLines[curLine].length() + childCategories.get(i).length() > 53) {
-				curLine++;
-			}
-			childLines[curLine] += childCategories.get(i) + " (c" + i + ") ";
+		int field1Length = searchField1.length();
+		int field2Length = searchField2.length();
+
+		for (int i = 0; i < 14 - field1Length; i++) {
+			searchField1 += "_";
 		}
 
-		categoriesBox.setLine(3, childLines[0]);
-		categoriesBox.setLine(4, childLines[1]);
+		for (int i = 0; i < 14 - field2Length; i++) {
+			searchField2 += "_";
+		}
+
+		searchBox.setLine(1, " Search for products containing: " + searchField1 + " (s1) and " + searchField2 + " (s2) ");
 	}
 
-	public void updateSortBy() {
-		if (sortByHighest) {
-			sortByBox.setLine(2, " |X| Highest Bid (h)  ");
-			sortByBox.setLine(3, " | | Alphabetical (a) ");
-		} else {
-			sortByBox.setLine(2, " | | Highest Bid (h)  ");
-			sortByBox.setLine(3, " |X| Alphabetical (a) ");
-		}
-	}
+
+	public int run() {
+        reset();
+
+        boolean finished = false;
+        while (!finished) {
+        	updateSearchBox();
+        	listProducts();
+        	draw();
+
+            String option = getInput();
+            if (option.equals("<")) {
+                finished = true;
+            } else if (option.equals("s1")) {
+            	cursorAt = 0;
+            	searchTerm1 = "";
+            	updateSearchBox();
+
+            	draw();
+
+            	searchTerm1 = getInput();
+            	if (searchTerm1.equals("<")) {
+            		finished = true;
+            	}
+            } else if (option.equals("s2")) {
+            	cursorAt = 1;
+            	searchTerm2 = "";
+            	updateSearchBox();
+
+            	draw();
+
+            	searchTerm2 = getInput();
+            	if (searchTerm2.equals("<")) {
+            		finished = true;
+            	}
+            } else {
+            	if (cursorAt == 0) {
+            		searchTerm1 = option;
+            	} else if (cursorAt == 1) {
+            		searchTerm2 = option;
+            	}
+            }
+        }
+
+        return CUSTOMER;
+    }
 
 	public void listProducts() {
 		try {
 			ResultSet results;
 
-			if (listByHighestStatement == null) {
-				listByHighestStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listByHighest.sql"));
+			if (listBySearchStatement == null) {
+				listBySearchStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listBySearch.sql"));
 			}
 
-			if (listByAlphabetStatement == null) {
-				listByAlphabetStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listByAlphabet.sql"));
-			}
+			listBySearchStatement.setString(1, "%" + searchTerm1 + "%");
+			listBySearchStatement.setString(2, "%" + searchTerm2 + "%");
 
-			if (listByHighestAllStatement == null) {
-				listByHighestAllStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listByHighestAll.sql"));
-			}
-
-			if (listByAlphabetAllStatement == null) {
-				listByAlphabetAllStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listByAlphabetAll.sql"));
-			}
-
-			if (sortByHighest) {
-				if (curCategory.equals("")) {
-					results = listByHighestAllStatement.executeQuery();
-				} else {
-					listByHighestStatement.setString(1, curCategory);
-					results = listByHighestStatement.executeQuery();
-				}
-			} else {
-				if (curCategory.equals("")) {
-					results = listByAlphabetAllStatement.executeQuery();
-				} else {
-					listByAlphabetStatement.setString(1, curCategory);
-					results = listByAlphabetStatement.executeQuery();
-				}
-			}
+			results = listBySearchStatement.executeQuery();
 
 			while (results.next()) {
 				int auctionId = results.getInt("auction_id");
@@ -170,169 +157,32 @@ public class SearchProductsScreen extends Screen {
 		if (products.size() <= 0) {
 			productsBox.setLine(1, " No products to show.");
 		} else {
-			productsBox.setLine(0, " Name | Desc. | Amount | Min. Price | Start Date | Num. Days | Seller");
-			productsBox.setLine(1, "");
+			productsBox.setLine(0, " ID | Name | Desc. | Amount | Min. Price | Start Date | Num. Days | Seller");
+			productsBox.setLine(1, " -------------------------------------------------------------------------");
 
-			ArrayList<Product> productsOnPage = paginator.paginate(products, curPage, 4);
+			ArrayList<Product> productsOnPage = paginator.paginate(products, curPage, 5);
 			for (int i = 0; i < productsOnPage.size(); i++) {
 				Product product = productsOnPage.get(i);
 				int lineOffset = i * 2;
-				productsBox.setLine(lineOffset + 2, product.getDisplayName() + " | "
+				productsBox.setLine(lineOffset + 2, " " + product.auctionId + " | "
+												  + product.getDisplayName() + " | "
 											   	  + product.getBriefDescription() + " | $"
 											      + product.amount + " | $"
 											      + product.minPrice + " | "
 											      + product.startDate + " | "
 											      + product.numberOfDays + " | "
-											      + product.seller + " ("
-											      + product.auctionId + ")");
+											      + product.seller);
 			}
-			productsBox.setLine(11, paginator.getPageMenu(products, curPage, 4));
+			productsBox.setLine(13, paginator.getPageMenu(products, curPage, 5));
 		}
-	}
-
-	public ArrayList<String> getRootCategories() {
-		ArrayList<String> roots = new ArrayList<String>();
-
-		try {
-			ResultSet results;
-
-			if (rootCategoriesStatement == null) {
-				rootCategoriesStatement = session.getDb().prepareStatement("select name from category where parent_category is null");
-			}
-
-			results = rootCategoriesStatement.executeQuery();
-			while (results.next()) {
-				roots.add(results.getString("name"));
-			}
-		} catch (SQLException e) {
-			while (e != null) {
-				debug.println(e.toString());
-				debug.flush();
-				e = e.getNextException();
-			}
-		}
-
-		return roots;
-	}
-
-	public ArrayList<String> getChildCategories(String category) {
-		ArrayList<String> categories = new ArrayList<String>();
-
-		try {
-			ResultSet results;
-
-			if (childCategoriesStatement == null) {
-				childCategoriesStatement = session.getDb().prepareStatement("select name from category where parent_category = ?");
-			}
-
-			childCategoriesStatement.setString(1, category);
-
-			results = childCategoriesStatement.executeQuery();
-			while (results.next()) {
-				categories.add(results.getString("name"));
-			}
-		} catch (SQLException e) {
-			while (e != null) {
-				debug.println(e.toString());
-				debug.flush();
-				e = e.getNextException();
-			}
-		}
-
-		return categories;
-	}
-
-	public String getParentCategory(String category) {
-		String parent = "";
-		if (category == null || category.equals("")) {
-			return parent;
-		}
-
-		try {
-			ResultSet results;
-
-			if (parentCategoryStatement == null) {
-				parentCategoryStatement = session.getDb().prepareStatement("select parent_category from category where name = ?");
-			}
-
-			parentCategoryStatement.setString(1, category);
-
-			results = parentCategoryStatement.executeQuery();
-			results.next();
-			parent = results.getString("parent_category");
-			if (parent == null) {
-				parent = "";
-			}
-		} catch (SQLException e) {
-			while (e != null) {
-				debug.println(e.toString());
-				debug.flush();
-				e = e.getNextException();
-			}
-		}
-
-		return parent;
 	}
 
 	public void reset() {
-		sortByHighest = false;
-		curCategory = "";
-		childCategories = null;
+		searchTerm1 = "";
+		searchTerm2 = "";
+		cursorAt = 0;
 		products = new ArrayList<Product>();
 		curPage = 1;
 		paginator = new Paginator<Product>();
-	}
-
-	public int run() {
-		int nextScreen = BROWSE_PRODUCTS;
-
-		reset();
-
-		boolean finishedHere = false;
-		while (!finishedHere) {
-			updateCategories();
-			updateSortBy();
-			listProducts();
-
-			draw();
-
-			String option;
-			try {
-				option = getInput();
-
-				if (option.equals("h")) {
-					sortByHighest = true;
-				} else if (option.equals("a")) {
-					sortByHighest = false;
-				} else if (option.equals("u")) {
-					// find the parent category and redisplay hierarchy
-					curCategory = getParentCategory(curCategory);
-				} else if (option.startsWith("c")) {
-					// select the child category at the given index and redisplay hierarchy
-					option = option.substring(1, option.length());
-					int childCategory = Integer.parseInt(option);
-					curCategory = childCategories.get(childCategory);
-				} else if (option.startsWith("p")) {
-					option = option.substring(1, option.length());
-					curPage = Integer.parseInt(option);
-				} else if (option.startsWith("<")) {
-					// go back to the customer screen
-					nextScreen = CUSTOMER;
-					finishedHere = true;
-				} else {
-					int auctionId = Integer.parseInt(option);
-					session.setSelectedAuctionId(auctionId);
-
-					nextScreen = AUCTION;
-					finishedHere = true;
-				}
-			} catch (Exception e) {
-				debug.println(e.toString());
-				updateStatus("YOU DUN GOOFED");
-				nextScreen = BROWSE_PRODUCTS;
-			}
-		}
-
-		return nextScreen;
 	}
 }
