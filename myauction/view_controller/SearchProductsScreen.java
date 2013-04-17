@@ -24,7 +24,7 @@ public class SearchProductsScreen extends Screen {
 		super(session);
 
 		CLIObject headerBox = new CLIObject(WIDTH, 2);
-		headerBox.setLine(0, " Previous (<)                    Searching Products                          ");
+		headerBox.setLine(0, " Previous (<)          Searching Products by Description                     ");
 		headerBox.setLine(1, "-----------------------------------------------------------------------------");
 
 		searchBox = new CLIObject(WIDTH, 4);
@@ -89,7 +89,10 @@ public class SearchProductsScreen extends Screen {
             String option = getInput();
             if (option.equals("<")) {
                 finished = true;
-            } else if (option.equals("s1")) {
+            } else if (option.startsWith("p")) {
+				option = option.substring(1, option.length());
+				curPage = Integer.parseInt(option);
+			} else if (option.equals("s1")) {
             	cursorAt = 0;
             	searchTerm1 = "";
             	updateSearchBox();
@@ -123,14 +126,21 @@ public class SearchProductsScreen extends Screen {
         return CUSTOMER;
     }
 
+    public void clearProductsBox() {
+    	for (int i = 0; i < 14; i++) {
+    		productsBox.setLine(i, "");
+    	}
+    }
+
 	public void listProducts() {
 		products = new ArrayList<Product>();
-		
+		clearProductsBox();
+
 		try {
 			ResultSet results;
 
 			if (listBySearchStatement == null) {
-				listBySearchStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listBySearch.sql"));
+				listBySearchStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/productSearch.sql"));
 			}
 
 			listBySearchStatement.setString(1, "%" + searchTerm1 + "%");
