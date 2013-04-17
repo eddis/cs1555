@@ -116,6 +116,7 @@ public class BrowseProductsScreen extends Screen {
 	public void listProducts() {
 		try {
 			ResultSet results;
+			products = new ArrayList<Product>();
 
 			if (listByHighestStatement == null) {
 				listByHighestStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listByHighest.sql"));

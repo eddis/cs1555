@@ -30,7 +30,7 @@ public class TrendsScreen extends Screen {
     public TrendsScreen(Session session) {
         super(session);
         CLIObject headerBox = new CLIObject(WIDTH, 2);
-        headerBox.setLine(0, "Previous (<)                  Trends                                       ");
+        headerBox.setLine(0, "Previous (<)                      Trends                                    ");
         headerBox.setLine(1, "----------------------------------------------------------------------------");
 
         chooseParamsBox = new CLIObject(WIDTH, 2);
