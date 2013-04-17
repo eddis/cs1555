@@ -4,6 +4,8 @@ import java.awt.Point;
 import java.sql.*;
 import myauction.CLIObject;
 import myauction.Session;
+import myauction.QueryLoader;
+
 
 public class NewUserScreen extends Screen {
 	private CLIObject createUserBox;
@@ -78,7 +80,7 @@ public class NewUserScreen extends Screen {
 		draw();
 		String address = getInput();
 		if (isPrevious(address)){
-		\	return ADMIN;
+			return ADMIN;
 		}
 		setAddress(address);
 
@@ -121,6 +123,7 @@ public class NewUserScreen extends Screen {
 		setAdministrator("");
 		setName("");
 		setEmail("");
+		setAddress("");
 		setUsername("");
 		setPassword("");
 	}

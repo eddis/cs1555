@@ -31,8 +31,8 @@ public class AdminScreen extends Screen {
 		statsBox.setLine(5, "-----------------------------");
 
 
-		addScreenObject(tasksBox, new Point(originX + 3, originY + 6));
-		addScreenObject(statsBox, new Point(originX + 3, originY + 13));
+		addScreenObject(tasksBox, new Point(originX + 3, originY + 2));
+		addScreenObject(statsBox, new Point(originX + 3, originY + 9));
 	}	
 	
 

@@ -1,6 +1,10 @@
 package myauction.model;
 
+
 import java.sql.*;
+
+import myauction.QueryLoader;
+
 
 public class Product {
 	private Connection db;
@@ -20,6 +24,10 @@ public class Product {
 	private static PreparedStatement findProductStatement = null;
 	private static PreparedStatement productBidsStatement = null;
 	private static PreparedStatement calcEndDateStatement = null;
+	private static PreparedStatement highestBidderStatement = null;
+
+
+
 
 	public Product(Connection db, int id) {
 		this.db = db;
@@ -48,11 +56,12 @@ public class Product {
 			amount = results.getInt("amount");
 		} catch (SQLException e) {
 			while (e != null) {
-				System.out.println(e.toString());
+			//	System.out.println(e.toString());
 				e = e.getNextException();
 			}
 		}
 	}
+
 
 	public String getDisplayName() {
 		if (name.length() > 12) {
@@ -91,7 +100,7 @@ public class Product {
 			numBids = results.getInt("num_bids");
 		} catch (SQLException e) {
 			while (e != null) {
-				System.out.println(e.toString());
+				//System.out.println(e.toString());
 				e = e.getNextException();
 			}
 		}
@@ -115,7 +124,7 @@ public class Product {
 			endDate = results.getDate("end_date");
 		} catch (SQLException e) {
 			while (e != null) {
-				System.out.println(e.toString());
+				//System.out.println(e.toString());
 				e = e.getNextException();
 			}
 		}
@@ -125,7 +134,7 @@ public class Product {
 
 	public String getHighestBidder() {
 		String highestBidder = null;
-		if (status.equals('sold')) {
+		if (status.equals("sold")) {
 			return buyer;
 		}
 		try {
@@ -137,8 +146,7 @@ public class Product {
 
 		} catch (SQLException e) {
 			while (e != null ) {
-				debug.println(e.toString());
-				debug.flush();
+				//System.out.println(e.toString());
 				e = e.getNextException();
 			}
 		}
