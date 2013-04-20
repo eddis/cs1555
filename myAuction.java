@@ -17,7 +17,8 @@ public class myAuction {
 			new NewUserScreen(session),
 			new UpdateTimeScreen(session),
 			new ProductStatsScreen(session),
-			new TrendsScreen(session)
+			new TrendsScreen(session),
+			new CloseAuctionScreen(session)
 		};
 
 		Screen screen = screens[Screen.LOGIN];

@@ -79,7 +79,7 @@ public class Product {
 
 	public String getPrice() {
 		if (amount == 0) {
-			return "Min. Price: " + minPrice;
+			return "" + minPrice;
 		}
 		return "" + amount;
 	}

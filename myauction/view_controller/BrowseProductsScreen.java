@@ -114,9 +114,10 @@ public class BrowseProductsScreen extends Screen {
 	}
 
 	public void listProducts() {
+		products = new ArrayList<Product>();
+
 		try {
 			ResultSet results;
-			products = new ArrayList<Product>();
 
 			if (listByHighestStatement == null) {
 				listByHighestStatement = session.getDb().prepareStatement(QueryLoader.loadQuery("myauction/queries/listByHighest.sql"));
@@ -304,16 +305,20 @@ public class BrowseProductsScreen extends Screen {
 
 				if (option.equals("h")) {
 					sortByHighest = true;
+					curPage = 1;
 				} else if (option.equals("a")) {
 					sortByHighest = false;
+					curPage = 1;
 				} else if (option.equals("u")) {
 					// find the parent category and redisplay hierarchy
 					curCategory = getParentCategory(curCategory);
+					curPage = 1;
 				} else if (option.startsWith("c")) {
 					// select the child category at the given index and redisplay hierarchy
 					option = option.substring(1, option.length());
 					int childCategory = Integer.parseInt(option);
 					curCategory = childCategories.get(childCategory);
+					curPage = 1;
 				} else if (option.startsWith("p")) {
 					option = option.substring(1, option.length());
 					curPage = Integer.parseInt(option);
