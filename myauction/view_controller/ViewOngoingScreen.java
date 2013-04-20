@@ -30,7 +30,7 @@ public class ViewOngoingScreen extends Screen {
 
 		selectionBox = new CLIObject(WIDTH, 3);
 		selectionBox.setLine(0, "");
-		selectionBox.setLine(1, " Enter auction ID to select it");
+		selectionBox.setLine(1, "");
 		selectionBox.setLine(2, "-----------------------------------------------------------------------------");
 
 		productsBox = new CLIObject(WIDTH, 14);
@@ -64,11 +64,6 @@ public class ViewOngoingScreen extends Screen {
 	        	if (option.matches("p\\d+")) {
 					option = option.substring(1, option.length());
 					curPage = Integer.parseInt(option);
-	        	} else {
-		        	int auctionId = auctionValidator.validate(option);
-		        	session.setSelectedAuctionId(auctionId);
-		        	nextScreen = AUCTION;
-		        	finished = true;
 	        	}
 			} catch (SpecialCharException e) {
 				if (e.getMessage().equals("<")) {

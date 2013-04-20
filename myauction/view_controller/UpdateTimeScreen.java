@@ -93,8 +93,9 @@ public class UpdateTimeScreen extends Screen {
 			String second = getInput();
 			prevDetector.validate(second);
 			setSecond(second);
-			Date time = dateValidator.validate(month, day, year, hour, minute, second);
-			int rowUpdated = updateTime(time);
+			dateValidator.validate(month, day, year, hour, minute, second);
+			Date time = new Date(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day));
+			int rowUpdated = updateTime(month, day, year, hour, minute, second);
 			if (rowUpdated > 0) {
 				curTime = time.toString();
 				updateStatus("You have changed the system time to: " + time);
@@ -116,12 +117,36 @@ public class UpdateTimeScreen extends Screen {
 		return UPDATE_TIME;
 	}
 
-	public int updateTime(Date time) {
+	public String formatDate(String month, String day, String year, String hour, String minute, String second) {
+		if (month.length() == 1) {
+			month = "0" + month;
+		}
+
+		if (day.length() == 1) {
+			day = "0" + day;
+		}
+
+		if (hour.length() == 1) {
+			hour = "0" + hour;
+		}
+
+		if (minute.length() == 1) {
+			minute = "0" + minute;
+		}
+
+		if (second.length() == 1) {
+			second = "0" + second;
+		}
+
+		return month + "/" + day + "/" + year + " " + hour + ":" + minute + ":" + second;
+	}
+
+	public int updateTime(String month, String day, String year, String hour, String minute, String second) {
 		try{
 			if (updateTimeStatement == null) {
-				updateTimeStatement = session.getDb().prepareStatement("update system_time set current_time = ?");
+				updateTimeStatement = session.getDb().prepareStatement("update system_time set current_time = to_date(?, 'MM/DD/YYYY HH24:MI:SS')");
 			}
-			updateTimeStatement.setDate(1, time);
+			updateTimeStatement.setString(1, formatDate(month, day, year, hour, minute, second));
 			return updateTimeStatement.executeUpdate();
 		} catch (SQLException e) {
             while (e != null) {
@@ -133,7 +158,7 @@ public class UpdateTimeScreen extends Screen {
 		return -1;
 	}
 	public String getCurrentTime(){
-			try {
+		try {
 			if (curTimeStatement == null) {
 				curTimeStatement = session.getDb().prepareStatement("select to_char(current_time, 'MM/DD/YYYY HH24:MI:SS') as cur_time from system_time");
 			}
@@ -167,7 +192,7 @@ public class UpdateTimeScreen extends Screen {
 	}
 
 	public void setYear(String year) {
-				String line = "| Year (YYYY): " + year;
+		String line = "| Year (YYYY): " + year;
 		for (int i = year.length(); i < 19; i++) {
 			line += " ";
 		}
