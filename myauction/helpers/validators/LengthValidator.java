@@ -1,21 +1,23 @@
 package myauction.helpers.validators;
 
-public class LengthValidator extends Validator {
+public class LengthValidator extends Validator<String> {
 	int minLength;
 	int maxLength;
 
-	public LengthValidator(int min, int max) {
-		super();
+	public LengthValidator(String flag, int min, int max) {
+		super(flag);
 		
 		minLength = min;
 		maxLength = max;
 	}
 
-	public void validate(String input) throws ValidationException {
+	public String validate(String input) throws ValidationException {
 		if (input.length() < minLength) {
-			throw new ValidationException("Min. chars: " + minLength);
+			throw new ValidationException(flag, "Min. chars: " + minLength);
 		} else if (input.length() > maxLength) {
-			throw new ValidationException("Max. chars: " + maxLength);
+			throw new ValidationException(flag, "Max. chars: " + maxLength);
 		}
+
+		return input;
 	}
 }

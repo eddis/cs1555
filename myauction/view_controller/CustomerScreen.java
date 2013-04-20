@@ -38,7 +38,7 @@ public class CustomerScreen extends Screen {
 
 		suggestionsBox = new CLIObject(WIDTH, 20);
 		suggestionsBox.setLine(0, "|");
-		suggestionsBox.setLine(1, "|          Products You Might Like");
+		suggestionsBox.setLine(1, "|        Products You Might Like");
 		suggestionsBox.setLine(2, "|   ID | Name | Price | Bids | Ends on");
 		for (int i = 3; i < 20; i++) {
 			suggestionsBox.setLine(i, "|");
@@ -64,6 +64,10 @@ public class CustomerScreen extends Screen {
 
 	public void reset() {
 		suggestedProducts = new ArrayList<Product>();
+
+		for (int i = 3; i < 20; i++) {
+			suggestionsBox.setLine(i, "|");
+		}
 	}
 
 	public int run() {
