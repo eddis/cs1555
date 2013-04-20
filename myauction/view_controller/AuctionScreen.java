@@ -6,6 +6,8 @@ import myauction.CLIObject;
 import myauction.Session;
 import myauction.model.Product;
 import java.text.SimpleDateFormat;
+import myauction.helpers.validators.*;
+
 
 public class AuctionScreen extends Screen {
 	private int auctionId;
@@ -15,6 +17,7 @@ public class AuctionScreen extends Screen {
 	private CLIObject bidBox;
 	private static PreparedStatement insertBidStatement;
 	private static PreparedStatement curTimeStatement;
+	private static SpecialCharDetector prevDetector = new SpecialCharDetector("<");
 	private SimpleDateFormat dateFormat; 
 
 	public AuctionScreen(Session session) {
@@ -65,16 +68,24 @@ public class AuctionScreen extends Screen {
 	public int run() {
 		reset();
 		draw();
-		String userPrice = getInput();
-		int userBid = Integer.parseInt(userPrice);
-		int rowAdded = insertUserBid(userBid);
-		if (rowAdded > 0) {
-			updateStatus("You have bid " + userBid + "on "+ product.getDisplayName() + "sucessfully");
+		try {
+			String userPrice = getInput();
+			prevDetector.validate(userPrice);
+			int userBid = Integer.parseInt(userPrice);
+			int rowAdded = insertUserBid(userBid);
+			if (rowAdded > 0) {
+				updateStatus("You have bid " + userBid + "on "+ product.getDisplayName() + "sucessfully");
+			}
+			else {
+				updateStatus("Bid not placed.");
+			}
+		} catch (SpecialCharException e) {
+			if (e.getMessage().equals("<")) {
+				return CUSTOMER;
+			}
+		} catch (Exception e) {
+			updateStatus("Something is wrong!");
 		}
-		else {
-			updateStatus("Bid not placed.");
-		}
-
 		return AUCTION;
 	}
 
