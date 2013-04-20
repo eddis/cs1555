@@ -105,10 +105,13 @@ public class UpdateTimeScreen extends Screen {
 			}
 		} catch (ValidationException e) {
 			updateStatus(e.getMessage());
+			updateStatus("");
 			return UPDATE_TIME;
-		} catch (Exception e) {
-			updateStatus("Unable to update time!");
-		}
+		 }// catch (Exception e) {
+		// 	debug.println(e.getMessage());
+		// 	debug.flush();
+		// 	updateStatus("Unable to update time!");
+		// }
 
 		return UPDATE_TIME;
 	}

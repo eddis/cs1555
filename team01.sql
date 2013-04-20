@@ -317,7 +317,7 @@ begin
 end;
 /
 
-create or replace procedure sell_product(auction_id in int)
+create or replace procedure sell_product(aid in int)
 is
 	num_bids int;
 	winning_bid_bidsn int;
@@ -327,12 +327,12 @@ begin
 	select count(bidsn)
 	into num_bids
 	from bidlog
-	where bidlog.auction_id = auction_id;
+	where bidlog.auction_id = aid;
 
 	if num_bids = 1 then
-		select bidsn into winning_bid_bidsn from bidlog where bidlog.auction_id = auction_id;
+		select bidsn into winning_bid_bidsn from bidlog where bidlog.auction_id = aid;
 	else
-		winning_bid_bidsn := Second_Highest_Bid(auction_id);
+		winning_bid_bidsn := Second_Highest_Bid(aid);
 	end if;
 
 	select amount into winning_bid_amount from bidlog where bidsn = winning_bid_bidsn;
@@ -343,7 +343,7 @@ begin
 	    buyer = winning_bid_bidder, 
 	    sell_date = start_date + number_of_days, 
 	    amount = winning_bid_amount
-	where product.auction_id = auction_id;
+	where product.auction_id = aid;
 
 	commit;
 end;
