@@ -161,11 +161,6 @@ public class SearchProductsScreen extends Screen {
 			}
 		}
 
-		for (Product product : products) {
-			debug.println(product.getDisplayName());
-		}
-		debug.flush();
-
 		if (products.size() <= 0) {
 			productsBox.setLine(1, " No products to show.");
 		} else {
