@@ -1,4 +1,5 @@
 import myauction.view_controller.*;
+import myauction.helpers.validators.*;
 import myauction.Session;
 
 public class myAuction {

@@ -93,7 +93,7 @@ public class AuctionScreen extends Screen {
 		}
 	}
 
-	public void insertUserBid(int userBid) {
+	public int insertUserBid(int userBid) {
 		try {
 			insertBidStatement.setInt(1, auctionId);
 			insertBidStatement.setString(2, session.getUsername());
@@ -101,11 +101,13 @@ public class AuctionScreen extends Screen {
 			insertBidStatement.setInt(4, userBid);
 
 			int rowAdded = insertBidStatement.executeUpdate();
+			return rowAdded;
 		} catch (SQLException e) {
 			debug.println(e.toString());
 			debug.flush();
 			e = e.getNextException();
 		}
+		return -1;
 
 	}
 
