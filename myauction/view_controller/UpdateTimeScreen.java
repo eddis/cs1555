@@ -94,7 +94,7 @@ public class UpdateTimeScreen extends Screen {
 			prevDetector.validate(second);
 			setSecond(second);
 			dateValidator.validate(month, day, year, hour, minute, second);
-			Date time = new Date(year, month, day);
+			Date time = new Date(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day));
 			int rowUpdated = updateTime(month, day, year, hour, minute, second);
 			if (rowUpdated > 0) {
 				curTime = time.toString();
