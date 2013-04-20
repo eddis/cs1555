@@ -26,11 +26,12 @@ public class DateValidator extends Validator<Date> {
 	public DateValidator(String flag) {
 		super(flag);
 	}
+	
 	public Date validate(String date) {
 		return null;
 	}
+
 	public Date validate(String month, String day, String year, String hour, String minute, String second) throws ValidationException {
-		Date date;
 		int monthAsNum = 0;
 		int dayAsNum = 0;
 		int yearAsNum = 0;
@@ -74,11 +75,6 @@ public class DateValidator extends Validator<Date> {
 			throw new ValidationException(flag, "Second: " + e.getMessage());
 		}
 
-		date = new Date(yearAsNum, monthAsNum, dayAsNum);
-		date.setHours(hourAsNum);
-		date.setMinutes(minuteAsNum);
-		date.setSeconds(secondAsNum);
-
-		return date;
+		return null;
 	}
 }
