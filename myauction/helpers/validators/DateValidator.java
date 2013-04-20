@@ -26,7 +26,9 @@ public class DateValidator extends Validator<Date> {
 	public DateValidator(String flag) {
 		super(flag);
 	}
-
+	public Date validate(String date) {
+		return null;
+	}
 	public Date validate(String month, String day, String year, String hour, String minute, String second) throws ValidationException {
 		Date date;
 		int monthAsNum = 0;
@@ -39,37 +41,37 @@ public class DateValidator extends Validator<Date> {
 		try {
 			monthAsNum = monthValidator.validate(month);
 		} catch (ValidationException e) {
-			throw new ValidationException(flag, "Month: " + e.getMessage));
+			throw new ValidationException(flag, "Month: " + e.getMessage());
 		}
 
 		try {
 			dayAsNum = dayValidators[monthAsNum-1].validate(day);
 		} catch (ValidationException e) {
-			throw new ValidationException(flag, "Day: " + e.getMessage));
+			throw new ValidationException(flag, "Day: " + e.getMessage());
 		}
 
 		try {
 			yearAsNum = yearValidator.validate(year);
 		} catch (ValidationException e) {
-			throw new ValidationException(flag, "Year: " + e.getMessage));
+			throw new ValidationException(flag, "Year: " + e.getMessage());
 		}
 
 		try {
 			hourAsNum = hourValidator.validate(hour);
 		} catch (ValidationException e) {
-			throw new ValidationException(flag, "Hour: " + e.getMessage));
+			throw new ValidationException(flag, "Hour: " + e.getMessage());
 		}
 
 		try {
 			minuteAsNum = minuteValidator.validate(minute);
 		} catch (ValidationException e) {
-			throw new ValidationException(flag, "Minute: " + e.getMessage));
+			throw new ValidationException(flag, "Minute: " + e.getMessage());
 		}
 
 		try {
 			secondAsNum = secondValidator.validate(second);
 		} catch (ValidationException e) {
-			throw new ValidationException(flag, "Second: " + e.getMessage));
+			throw new ValidationException(flag, "Second: " + e.getMessage());
 		}
 
 		date = new Date(yearAsNum, monthAsNum, dayAsNum);

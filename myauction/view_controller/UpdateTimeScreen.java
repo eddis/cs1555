@@ -5,6 +5,8 @@ import java.sql.*;
 import myauction.CLIObject;
 import myauction.Session;
 import myauction.QueryLoader;
+import myauction.helpers.validators.*;
+
 
 
 public class UpdateTimeScreen extends Screen {
@@ -14,11 +16,12 @@ public class UpdateTimeScreen extends Screen {
 	private String curTime;
 	private PreparedStatement curTimeStatement;
 
+	private static DateValidator dateValidator = new DateValidator("date");
+	private static SpecialCharDetector prevDetector = new SpecialCharDetector("<");
 
 
 	public UpdateTimeScreen(Session session) {
 		super(session);
-
 
 		headerBox = new CLIObject(WIDTH, 2);
 		headerBox.setLine(0, "Previous (<)                  Update System Time                            ");
@@ -54,69 +57,68 @@ public class UpdateTimeScreen extends Screen {
 	public int run() {
 		reset();
 		draw();
-		String month = getInput();
-		if (month.equals("<")) {
-			return ADMIN;
-		}
-		setMonth(month);
-		
-		updateTimeBox.setLine(3, "| Day (DD) : |_                   |");
-		draw();
-		String day = getInput();
-		if (day.equals("<")) {
-			return ADMIN;
-		}
-		setDay(day);
+		try{
+			String month = getInput();
+			prevDetector.validate(month);
+			setMonth(month);
+			
+			updateTimeBox.setLine(3, "| Day (DD) : |_                   |");
+			draw();
+			String day = getInput();
+			prevDetector.validate(day);
+			setDay(day);
 
-		updateTimeBox.setLine(4, "| Year (YYYY) : |___              |");
-		draw();
-		String year = getInput();
-		if (month.equals("<")) {
-			return ADMIN;
-		}
-		setYear(year);
+			updateTimeBox.setLine(4, "| Year (YYYY) : |___              |");
+			draw();
+			String year = getInput();
+			prevDetector.validate(year);
+			setYear(year);
 
-		updateTimeBox.setLine(6, "| Hour (hh): |_                   |");
-		draw();
-		String hour = getInput();
-		if (hour.equals("<")) {
-			return ADMIN;
-		}
-		setHour(hour);
-		
+			updateTimeBox.setLine(6, "| Hour (hh): |_                   |");
+			draw();
+			String hour = getInput();
+			prevDetector.validate(hour);
+			setHour(hour);
+			
 
-		updateTimeBox.setLine(7, "| Minute (mm): |_                 |");
-		draw();
-		String minute = getInput();
-		if (minute.equals("<")){
-			return ADMIN;
-		}
-		setMinute(minute);
+			updateTimeBox.setLine(7, "| Minute (mm): |_                 |");
+			draw();
+			String minute = getInput();
+			prevDetector.validate(minute);
+			setMinute(minute);
 
-		updateStatus("");
-		updateTimeBox.setLine(8, "| Second (ss): |_                 |");
-		draw();
-		String second = getInput();
-		if (second.equals("<")){
-			return ADMIN;
-		}
-		setSecond(second);
-		String time = month + "/" + day +"/" + year + " " + hour + ":" + minute + ":" + second; 
-		int rowUpdate = updateTime(time);
-		if (rowUpdate > 0) {
-			curTime = time;
-			updateStatus("You have changed the system time to: " + time);
+			updateStatus("");
+			updateTimeBox.setLine(8, "| Second (ss): |_                 |");
+			draw();
+			String second = getInput();
+			prevDetector.validate(second);
+			setSecond(second);
+			Date time = dateValidator.validate(month, day, year, hour, minute, second);
+			int rowUpdated = updateTime(time);
+			if (rowUpdated > 0) {
+				curTime = time.toString();
+				updateStatus("You have changed the system time to: " + time);
+			}
+		} catch (SpecialCharException e) {
+			if (e.getMessage().equals("<")) {
+				return ADMIN;
+			}
+		} catch (ValidationException e) {
+			updateStatus(e.getMessage());
+			return UPDATE_TIME;
+		} catch (Exception e) {
+			updateStatus("Unable to update time!");
 		}
 
 		return UPDATE_TIME;
 	}
 
-	public int updateTime(String time) {
+	public int updateTime(Date time) {
 		try{
 			if (updateTimeStatement == null) {
-				updateTimeStatement = session.getDb().prepareStatement("update system_time set current_time = to_date(?, 'MM/DD/YYYY HH24:MI:SS')");
+				updateTimeStatement = session.getDb().prepareStatement("update system_time set current_time = ?");
 			}
-			updateTimeStatement.setString(1, time);
+			updateTimeStatement.setDate(1, time);
 			return updateTimeStatement.executeUpdate();
 		} catch (SQLException e) {
             while (e != null) {

@@ -24,6 +24,7 @@ public class Screen extends CLI {
 	public static final int UPDATE_TIME = 10;
 	public static final int PRODUCT_STATS = 11;
 	public static final int TRENDS = 12;
+	public static final int CLOSE_AUCTION = 13;
 
 
 	protected int originX;
