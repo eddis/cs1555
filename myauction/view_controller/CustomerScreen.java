@@ -38,8 +38,8 @@ public class CustomerScreen extends Screen {
 
 		suggestionsBox = new CLIObject(WIDTH, 20);
 		suggestionsBox.setLine(0, "|");
-		suggestionsBox.setLine(1, "|          Products You Might Like");
-		suggestionsBox.setLine(2, "|       Name | Price | Bids | Ends on");
+		suggestionsBox.setLine(1, "|        Products You Might Like");
+		suggestionsBox.setLine(2, "|   ID | Name | Price | Bids | Ends on");
 		for (int i = 3; i < 20; i++) {
 			suggestionsBox.setLine(i, "|");
 		}
@@ -55,15 +55,19 @@ public class CustomerScreen extends Screen {
 		suggestedProducts.add(product);
 
 		int line = (suggestedProducts.size() - 1) % 2 + suggestedProducts.size() - 1 + 4;
-		suggestionsBox.setLine(line, "| " + product.getDisplayName() + " | $"
+		suggestionsBox.setLine(line, "| " + product.auctionId + " | "
+										  + product.getDisplayName() + " | $"
 										  + product.getPrice() + " | " 
 										  + product.getBids() + " | "
-										  + product.getEndDate() + " ("
-										  + product.auctionId + ")");
+										  + product.getEndDate());
 	}
 
 	public void reset() {
 		suggestedProducts = new ArrayList<Product>();
+
+		for (int i = 3; i < 20; i++) {
+			suggestionsBox.setLine(i, "|");
+		}
 	}
 
 	public int run() {

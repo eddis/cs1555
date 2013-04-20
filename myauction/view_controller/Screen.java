@@ -99,8 +99,8 @@ public class Screen extends CLI {
 	}
 
 	public void updateStatus(String statusText) {
-		int difference = 65 - statusText.length();
-		String line = statusText;
+		int difference = 64 - statusText.length();
+		String line = " " + statusText;
 		for (int i = 0; i < difference; i++) {
 			line += " ";
 		}

@@ -10,6 +10,14 @@ import myauction.model.Product;
 import myauction.helpers.Paginator;
 
 public class BrowseProductsScreen extends Screen {
+	private static PreparedStatement rootCategoriesStatement = null;
+	private static PreparedStatement childCategoriesStatement = null;
+	private static PreparedStatement parentCategoryStatement = null;
+	private static PreparedStatement listByHighestStatement = null;
+	private static PreparedStatement listByAlphabetStatement = null;
+	private static PreparedStatement listByHighestAllStatement = null;
+	private static PreparedStatement listByAlphabetAllStatement = null;
+
 	private CLIObject sortByBox;
 	private CLIObject categoriesBox;
 	private CLIObject productsBox;
@@ -19,13 +27,6 @@ public class BrowseProductsScreen extends Screen {
 	private ArrayList<Product> products;
 	private int curPage;
 	private Paginator<Product> paginator;
-	private static PreparedStatement rootCategoriesStatement = null;
-	private static PreparedStatement childCategoriesStatement = null;
-	private static PreparedStatement parentCategoryStatement = null;
-	private static PreparedStatement listByHighestStatement = null;
-	private static PreparedStatement listByAlphabetStatement = null;
-	private static PreparedStatement listByHighestAllStatement = null;
-	private static PreparedStatement listByAlphabetAllStatement = null;
 
 	public BrowseProductsScreen(Session session) {
 		super(session);
@@ -313,7 +314,8 @@ public class BrowseProductsScreen extends Screen {
 					// find the parent category and redisplay hierarchy
 					curCategory = getParentCategory(curCategory);
 					curPage = 1;
-				} else if (option.startsWith("c")) {
+
+				} else if (option.matches("c\\d+")) {
 					// select the child category at the given index and redisplay hierarchy
 					option = option.substring(1, option.length());
 					int childCategory = Integer.parseInt(option);
